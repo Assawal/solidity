@@ -46,7 +46,11 @@ void yul::removeEmptyBlocks(Block& _block)
 
 bool yul::isRestrictedIdentifier(Dialect const& _dialect, YulName const& _identifier)
 {
-	return _identifier.empty() || TokenTraits::isYulKeyword(_identifier.str()) || _dialect.reservedIdentifier(_identifier);
+	return YulNameRegistry::instance().empty(_identifier) || YulNameRegistry::instance().isYulKeyword(_identifier) || _dialect.reservedIdentifier(_identifier);
+}
+
+bool yul::isRestrictedIdentifier(Dialect const& _dialect, std::string_view _label) {
+	return YulNameRegistry::instance().empty(_label) || YulNameRegistry::instance().isYulKeyword(_label) || _dialect.reservedIdentifier(_label);
 }
 
 std::optional<evmasm::Instruction> yul::toEVMInstruction(Dialect const& _dialect, YulName const& _name)

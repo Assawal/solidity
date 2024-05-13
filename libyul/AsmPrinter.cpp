@@ -44,27 +44,29 @@ using namespace solidity::yul;
 
 std::string AsmPrinter::operator()(Literal const& _literal)
 {
+	auto const& registry = YulNameRegistry::instance();
+	auto const& reserved = registry.reserved();
 	std::string const locationComment = formatDebugData(_literal);
 
 	switch (_literal.kind)
 	{
 	case LiteralKind::Number:
-		yulAssert(isValidDecimal(_literal.value.str()) || isValidHex(_literal.value.str()), "Invalid number literal");
-		return locationComment + _literal.value.str() + appendTypeName(_literal.type);
+		yulAssert(isValidDecimal(registry.resolve(_literal.value)) || isValidHex(registry.resolve(_literal.value)), "Invalid number literal");
+		return locationComment + registry.resolve_s(_literal.value) + appendTypeName(_literal.type);
 	case LiteralKind::Boolean:
-		yulAssert(_literal.value == "true"_yulstring || _literal.value == "false"_yulstring, "Invalid bool literal.");
-		return locationComment + ((_literal.value == "true"_yulstring) ? "true" : "false") + appendTypeName(_literal.type, true);
+		yulAssert(_literal.value == reserved.btrue || _literal.value == reserved.bfalse, "Invalid bool literal.");
+		return locationComment + ((_literal.value == reserved.btrue) ? "true" : "false") + appendTypeName(_literal.type, true);
 	case LiteralKind::String:
 		break;
 	}
 
-	return locationComment + escapeAndQuoteString(_literal.value.str()) + appendTypeName(_literal.type);
+	return locationComment + escapeAndQuoteString(registry.resolve_s(_literal.value)) + appendTypeName(_literal.type);
 }
 
 std::string AsmPrinter::operator()(Identifier const& _identifier)
 {
-	yulAssert(!_identifier.name.empty(), "Invalid identifier.");
-	return formatDebugData(_identifier) + _identifier.name.str();
+	yulAssert(!YulNameRegistry::instance().empty(_identifier.name), "Invalid identifier.");
+	return formatDebugData(_identifier) + YulNameRegistry::instance().resolve_s(_identifier.name);
 }
 
 std::string AsmPrinter::operator()(ExpressionStatement const& _statement)
@@ -107,10 +109,10 @@ std::string AsmPrinter::operator()(VariableDeclaration const& _variableDeclarati
 
 std::string AsmPrinter::operator()(FunctionDefinition const& _functionDefinition)
 {
-	yulAssert(!_functionDefinition.name.empty(), "Invalid function name.");
+	yulAssert(!YulNameRegistry::instance().empty(_functionDefinition.name), "Invalid function name.");
 
 	std::string out = formatDebugData(_functionDefinition);
-	out += "function " + _functionDefinition.name.str() + "(";
+	out += "function " + YulNameRegistry::instance().resolve_s(_functionDefinition.name) + "(";
 	out += boost::algorithm::join(
 		_functionDefinition.parameters | ranges::views::transform(
 			[this](TypedName argument) { return formatTypedName(argument); }
@@ -237,24 +239,24 @@ std::string AsmPrinter::operator()(Block const& _block)
 
 std::string AsmPrinter::formatTypedName(TypedName _variable)
 {
-	yulAssert(!_variable.name.empty(), "Invalid variable name.");
-	return formatDebugData(_variable) + _variable.name.str() + appendTypeName(_variable.type);
+	yulAssert(!YulNameRegistry::instance().empty(_variable.name), "Invalid variable name.");
+	return formatDebugData(_variable) + YulNameRegistry::instance().resolve_s(_variable.name) + appendTypeName(_variable.type);
 }
 
 std::string AsmPrinter::appendTypeName(YulName _type, bool _isBoolLiteral) const
 {
-	if (m_dialect && !_type.empty())
+	if (m_dialect && !YulNameRegistry::instance().empty(_type))
 	{
 		if (!_isBoolLiteral && _type == m_dialect->defaultType)
 			_type = {};
-		else if (_isBoolLiteral && _type == m_dialect->boolType && !m_dialect->defaultType.empty())
+		else if (_isBoolLiteral && _type == m_dialect->boolType && !YulNameRegistry::instance().empty(m_dialect->defaultType))
 			// Special case: If we have a bool type but empty default type, do not remove the type.
 			_type = {};
 	}
-	if (_type.empty())
+	if (YulNameRegistry::instance().empty(_type))
 		return {};
 	else
-		return ":" + _type.str();
+		return ":" + YulNameRegistry::instance().resolve_s(_type);
 }
 
 std::string AsmPrinter::formatSourceLocation(

@@ -23,6 +23,7 @@
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/AST.h>
 #include <libyul/Exceptions.h>
+#include <libyul/YulName.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/UTF8.h>
 
@@ -38,21 +39,23 @@ Json AsmJsonConverter::operator()(Block const& _node) const
 
 Json AsmJsonConverter::operator()(TypedName const& _node) const
 {
-	yulAssert(!_node.name.empty(), "Invalid variable name.");
+	auto& registry = YulNameRegistry::instance();
+	yulAssert(!registry.empty(_node.name), "Invalid variable name.");
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulTypedName");
-	ret["name"] = _node.name.str();
-	ret["type"] = _node.type.str();
+	ret["name"] = registry.resolve(_node.name);
+	ret["type"] = registry.resolve(_node.type);
 	return ret;
 }
 
 Json AsmJsonConverter::operator()(Literal const& _node) const
 {
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulLiteral");
+	auto& registry = YulNameRegistry::instance();
 	switch (_node.kind)
 	{
 	case LiteralKind::Number:
 		yulAssert(
-			util::isValidDecimal(_node.value.str()) || util::isValidHex(_node.value.str()),
+			util::isValidDecimal(registry.resolve(_node.value)) || util::isValidHex(registry.resolve(_node.value)),
 			"Invalid number literal"
 		);
 		ret["kind"] = "number";
@@ -62,20 +65,21 @@ Json AsmJsonConverter::operator()(Literal const& _node) const
 		break;
 	case LiteralKind::String:
 		ret["kind"] = "string";
-		ret["hexValue"] = util::toHex(util::asBytes(_node.value.str()));
+		ret["hexValue"] = util::toHex(util::asBytes(registry.resolve(_node.value)));
 		break;
 	}
-	ret["type"] = _node.type.str();
-	if (util::validateUTF8(_node.value.str()))
-		ret["value"] = _node.value.str();
+	ret["type"] = registry.resolve(_node.type);
+	if (util::validateUTF8(registry.resolve(_node.value)))
+		ret["value"] = registry.resolve(_node.value);
 	return ret;
 }
 
 Json AsmJsonConverter::operator()(Identifier const& _node) const
 {
-	yulAssert(!_node.name.empty(), "Invalid identifier");
+	auto& registry = YulNameRegistry::instance();
+	yulAssert(!registry.empty(_node.name), "Invalid identifier");
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulIdentifier");
-	ret["name"] = _node.name.str();
+	ret["name"] = registry.resolve(_node.name);
 	return ret;
 }
 
@@ -115,9 +119,10 @@ Json AsmJsonConverter::operator()(VariableDeclaration const& _node) const
 
 Json AsmJsonConverter::operator()(FunctionDefinition const& _node) const
 {
-	yulAssert(!_node.name.empty(), "Invalid function name.");
+	auto &registry = YulNameRegistry::instance();
+	yulAssert(!registry.empty(_node.name), "Invalid function name.");
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulFunctionDefinition");
-	ret["name"] = _node.name.str();
+	ret["name"] = registry.resolve(_node.name);
 	for (auto const& var: _node.parameters)
 		ret["parameters"].emplace_back((*this)(var));
 	for (auto const& var: _node.returnVariables)

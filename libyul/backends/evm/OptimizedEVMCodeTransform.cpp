@@ -195,7 +195,7 @@ OptimizedEVMCodeTransform::OptimizedEVMCodeTransform(
 			bool useNamedLabel = _useNamedLabelsForFunctions != UseNamedLabels::Never && !nameAlreadySeen;
 			functionLabels[&functionInfo] = useNamedLabel ?
 				m_assembly.namedLabel(
-					function->name.str(),
+					YulNameRegistry::instance().resolve_s(function->name),
 					function->arguments.size(),
 					function->returns.size(),
 					functionInfo.debugData ? functionInfo.debugData->astID : std::nullopt
@@ -263,16 +263,17 @@ void OptimizedEVMCodeTransform::createStackLayout(langutil::DebugData::ConstPtr 
 			else
 			{
 				int deficit = static_cast<int>(_i) - 16;
+				auto const& registry = YulNameRegistry::instance();
 				StackSlot const& deepSlot = m_stack.at(m_stack.size() - _i - 1);
 				YulName varNameDeep = slotVariableName(deepSlot);
 				YulName varNameTop = slotVariableName(m_stack.back());
 				std::string msg =
-					"Cannot swap " + (varNameDeep.empty() ? "Slot " + stackSlotToString(deepSlot) : "Variable " + varNameDeep.str()) +
-					" with " + (varNameTop.empty() ? "Slot " + stackSlotToString(m_stack.back()) : "Variable " + varNameTop.str()) +
+					"Cannot swap " + (registry.empty(varNameDeep) ? "Slot " + stackSlotToString(deepSlot) : "Variable " + registry.resolve_s(varNameDeep)) +
+					" with " + (registry.empty(varNameTop) ? "Slot " + stackSlotToString(m_stack.back()) : "Variable " + registry.resolve_s(varNameTop)) +
 					": too deep in the stack by " + std::to_string(deficit) + " slots in " + stackToString(m_stack);
 				m_stackErrors.emplace_back(StackTooDeepError(
 					m_currentFunctionInfo ? m_currentFunctionInfo->function.name : YulName{},
-					varNameDeep.empty() ? varNameTop : varNameDeep,
+					registry.empty(varNameDeep) ? varNameTop : varNameDeep,
 					deficit,
 					msg
 				));
@@ -294,10 +295,11 @@ void OptimizedEVMCodeTransform::createStackLayout(langutil::DebugData::ConstPtr 
 				}
 				else if (!canBeFreelyGenerated(_slot))
 				{
+					auto const& registry = YulNameRegistry::instance();
 					int deficit = static_cast<int>(*depth - 15);
 					YulName varName = slotVariableName(_slot);
 					std::string msg =
-						(varName.empty() ? "Slot " + stackSlotToString(_slot) : "Variable " + varName.str())
+						(registry.empty(varName) ? "Slot " + stackSlotToString(_slot) : "Variable " + registry.resolve_s(varName))
 						+ " is " + std::to_string(*depth - 15) + " too deep in the stack " + stackToString(m_stack);
 					m_stackErrors.emplace_back(StackTooDeepError(
 						m_currentFunctionInfo ? m_currentFunctionInfo->function.name : YulName{},

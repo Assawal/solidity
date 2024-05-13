@@ -88,7 +88,7 @@ private:
 
 		bool isAbsolute() const
 		{
-			return reference.empty();
+			return YulNameRegistry::instance().empty(reference);
 		}
 
 		std::optional<u256> absoluteValue() const

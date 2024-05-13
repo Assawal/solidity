@@ -77,7 +77,8 @@ void NameSimplifier::findSimplification(YulName const& _name)
 	if (m_translations.count(_name))
 		return;
 
-	std::string name = _name.str();
+	auto const initialName = YulNameRegistry::instance().resolve(_name);
+	std::string name (initialName);
 
 	static auto replacements = std::vector<std::pair<std::regex, std::string>>{
 		{std::regex("_\\$|\\$_"), "_"}, // remove type mangling delimiters
@@ -102,15 +103,14 @@ void NameSimplifier::findSimplification(YulName const& _name)
 	for (auto const& [pattern, substitute]: replacements)
 	{
 		std::string candidate = regex_replace(name, pattern, substitute);
-		if (!candidate.empty() && !m_context.dispenser.illegalName(YulName(candidate)))
+		if (!candidate.empty() && !isRestrictedIdentifier(m_context.dialect, candidate) && !YulNameRegistry::instance().used(candidate))
 			name = candidate;
 	}
 
-	if (name != _name.str())
+	if (name != initialName)
 	{
-		YulName newName{name};
-		m_context.dispenser.markUsed(newName);
-		m_translations[_name] = std::move(newName);
+		auto const newIdentifier = YulNameRegistry::instance().idOf(name);
+		m_translations[_name] = newIdentifier;
 	}
 }
 

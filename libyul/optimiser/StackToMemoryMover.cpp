@@ -139,7 +139,7 @@ void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 				m_context.dialect,
 				returnVariable.debugData,
 				*slot,
-				Literal{returnVariable.debugData, LiteralKind::Number, "0"_yulstring, {}}
+				Literal{returnVariable.debugData, LiteralKind::Number, YulNameRegistry::instance().reserved().ui0, {}}
 			);
 
 	// Special case of a function with a single return argument that needs to move to memory.
@@ -213,7 +213,7 @@ void StackToMemoryMover::operator()(Block& _block)
 					m_context.dialect,
 					debugData,
 					*offset,
-					_stmt.value ? *std::move(_stmt.value) : Literal{debugData, LiteralKind::Number, "0"_yulstring, {}}
+					_stmt.value ? *std::move(_stmt.value) : Literal{debugData, LiteralKind::Number, YulNameRegistry::instance().reserved().ui0, {}}
 				);
 			else
 				return {};
@@ -314,7 +314,9 @@ std::optional<YulName> StackToMemoryMover::VariableMemoryOffsetTracker::operator
 	{
 		uint64_t slot = m_memorySlots.at(_variable);
 		yulAssert(slot < m_numRequiredSlots, "");
-		return YulName{toCompactHexWithPrefix(m_reservedMemory + 32 * (m_numRequiredSlots - slot - 1))};
+		return YulNameRegistry::instance().idOf(toCompactHexWithPrefix(
+			m_reservedMemory + 32 * (m_numRequiredSlots - slot - 1)
+		));
 	}
 	else
 		return std::nullopt;

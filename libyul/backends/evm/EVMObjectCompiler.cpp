@@ -55,8 +55,9 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 	for (auto const& subNode: _object.subObjects)
 		if (auto* subObject = dynamic_cast<Object*>(subNode.get()))
 		{
-			bool isCreation = !boost::ends_with(subObject->name.str(), "_deployed");
-			auto subAssemblyAndID = m_assembly.createSubAssembly(isCreation, subObject->name.str());
+			auto const& name = YulNameRegistry::instance().resolve_s(subObject->name);
+			bool isCreation = !boost::ends_with(name, "_deployed");
+			auto subAssemblyAndID = m_assembly.createSubAssembly(isCreation, name);
 			context.subIDs[subObject->name] = subAssemblyAndID.second;
 			subObject->subId = subAssemblyAndID.second;
 			compile(*subObject, *subAssemblyAndID.first, m_dialect, _optimize, m_eofVersion);
@@ -65,7 +66,7 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 		{
 			Data const& data = dynamic_cast<Data const&>(*subNode);
 			// Special handling of metadata.
-			if (data.name.str() == Object::metadataName())
+			if (YulNameRegistry::instance().resolve_s(data.name) == Object::metadataName())
 				m_assembly.appendToAuxiliaryData(data.data);
 			else
 				context.subIDs[data.name] = m_assembly.appendData(data.data);
@@ -91,8 +92,7 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 		if (!stackErrors.empty())
 		{
 			std::vector<FunctionCall*> memoryGuardCalls = FunctionCallFinder::run(
-				*_object.code,
-				"memoryguard"_yulstring
+				*_object.code, YulNameRegistry::instance().idOf("memoryguard")
 			);
 			auto stackError = stackErrors.front();
 			std::string msg = stackError.comment() ? *stackError.comment() : "";

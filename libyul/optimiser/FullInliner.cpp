@@ -85,7 +85,7 @@ FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser, Dialect const& 
 	// Check for memory guard.
 	std::vector<FunctionCall*> memoryGuardCalls = FunctionCallFinder::run(
 		_ast,
-		"memoryguard"_yulstring
+		YulNameRegistry::instance().reserved().memoryguard
 	);
 	// We will perform less aggressive inlining, if no ``memoryguard`` call is found.
 	if (!memoryGuardCalls.empty())
@@ -129,7 +129,7 @@ void FullInliner::run(Pass _pass)
 std::map<YulName, size_t> FullInliner::callDepths() const
 {
 	CallGraph cg = CallGraphGenerator::callGraph(m_ast);
-	cg.functionCalls.erase(""_yulstring);
+	cg.functionCalls.erase(YulNameRegistry::instance().emptyId());
 
 	// Remove calls to builtin functions.
 	for (auto& call: cg.functionCalls)

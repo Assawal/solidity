@@ -397,7 +397,7 @@ Statement Parser::parseStatement()
 			auto const& identifier = std::get<Identifier>(elementary);
 
 			if (m_dialect.builtin(identifier.name))
-				fatalParserError(6272_error, "Cannot assign to builtin function \"" + identifier.name.str() + "\".");
+				fatalParserError(6272_error, "Cannot assign to builtin function \"" + YulNameRegistry::instance().resolve_s(identifier.name) + "\".");
 
 			assignment.variableNames.emplace_back(identifier);
 
@@ -483,7 +483,7 @@ Expression Parser::parseExpression()
 				fatalParserError(
 					7104_error,
 					nativeLocationOf(_identifier),
-					"Builtin function \"" + _identifier.name.str() + "\" must be called."
+					"Builtin function \"" + YulNameRegistry::instance().resolve_s(_identifier.name) + "\" must be called."
 				);
 			return std::move(_identifier);
 		},
@@ -501,7 +501,7 @@ std::variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 	{
 	case Token::Identifier:
 	{
-		Identifier identifier{createDebugData(), YulName{currentLiteral()}};
+		Identifier identifier{createDebugData(), YulNameRegistry::instance().idOf(currentLiteral())};
 		advance();
 		return identifier;
 	}
@@ -534,7 +534,7 @@ std::variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 		Literal literal{
 			createDebugData(),
 			kind,
-			YulName{currentLiteral()},
+			YulNameRegistry::instance().idOf(currentLiteral()),
 			kind == LiteralKind::Boolean ? m_dialect.boolType : m_dialect.defaultType
 		};
 		advance();
@@ -673,9 +673,10 @@ TypedName Parser::parseTypedName()
 
 YulName Parser::expectAsmIdentifier()
 {
-	YulName name{currentLiteral()};
+	auto& registry = YulNameRegistry::instance();
+	auto const name = registry.idOf(currentLiteral());
 	if (currentToken() == Token::Identifier && m_dialect.builtin(name))
-		fatalParserError(5568_error, "Cannot use builtin function name \"" + name.str() + "\" as identifier name.");
+		fatalParserError(5568_error, "Cannot use builtin function name \"" + registry.resolve_s(name) + "\" as identifier name.");
 	// NOTE: We keep the expectation here to ensure the correct source location for the error above.
 	expectToken(Token::Identifier);
 	return name;

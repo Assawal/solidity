@@ -36,11 +36,11 @@ namespace solidity::yul
 inline std::string stackSlotToString(StackSlot const& _slot)
 {
 	return std::visit(util::GenericVisitor{
-		[](FunctionCallReturnLabelSlot const& _ret) -> std::string { return "RET[" + _ret.call.get().functionName.name.str() + "]"; },
+		[](FunctionCallReturnLabelSlot const& _ret) -> std::string { return "RET[" + YulNameRegistry::instance().resolve_s(_ret.call.get().functionName.name) + "]"; },
 		[](FunctionReturnLabelSlot const&) -> std::string { return "RET"; },
-		[](VariableSlot const& _var) { return _var.variable.get().name.str(); },
+		[](VariableSlot const& _var) { return YulNameRegistry::instance().resolve_s(_var.variable.get().name); },
 		[](LiteralSlot const& _lit) { return toCompactHexWithPrefix(_lit.value); },
-		[](TemporarySlot const& _tmp) -> std::string { return "TMP[" + _tmp.call.get().functionName.name.str() + ", " + std::to_string(_tmp.index) + "]"; },
+		[](TemporarySlot const& _tmp) -> std::string { return "TMP[" + YulNameRegistry::instance().resolve_s(_tmp.call.get().functionName.name) + ", " + std::to_string(_tmp.index) + "]"; },
 		[](JunkSlot const&) -> std::string { return "JUNK"; }
 	}, _slot);
 }

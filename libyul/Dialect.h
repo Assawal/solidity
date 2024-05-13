@@ -72,6 +72,7 @@ struct Dialect
 
 	/// @returns true if the identifier is reserved. This includes the builtins too.
 	virtual bool reservedIdentifier(YulName _name) const { return builtin(_name) != nullptr; }
+	virtual bool reservedIdentifier(std::string_view /* _label */) const { return false; }
 
 	virtual BuiltinFunction const* discardFunction(YulName /* _type */) const { return nullptr; }
 	virtual BuiltinFunction const* equalityFunction(YulName /* _type */) const { return nullptr; }

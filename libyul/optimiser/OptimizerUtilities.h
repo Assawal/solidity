@@ -46,6 +46,7 @@ void removeEmptyBlocks(Block& _block);
 /// Returns true if a given literal can not be used as an identifier.
 /// This includes Yul keywords and builtins of the given dialect.
 bool isRestrictedIdentifier(Dialect const& _dialect, YulName const& _identifier);
+bool isRestrictedIdentifier(Dialect const& _dialect, std::string_view _label);
 
 /// Helper function that returns the instruction, if the `_name` is a BuiltinFunction
 std::optional<evmasm::Instruction> toEVMInstruction(Dialect const& _dialect, YulName const& _name);

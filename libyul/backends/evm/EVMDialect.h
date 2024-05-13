@@ -74,14 +74,16 @@ struct EVMDialect: public Dialect
 	/// @returns true if the identifier is reserved. This includes the builtins too.
 	bool reservedIdentifier(YulName _name) const override;
 
-	BuiltinFunctionForEVM const* discardFunction(YulName /*_type*/) const override { return builtin("pop"_yulstring); }
-	BuiltinFunctionForEVM const* equalityFunction(YulName /*_type*/) const override { return builtin("eq"_yulstring); }
-	BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtin("iszero"_yulstring); }
-	BuiltinFunctionForEVM const* memoryStoreFunction(YulName /*_type*/) const override { return builtin("mstore"_yulstring); }
-	BuiltinFunctionForEVM const* memoryLoadFunction(YulName /*_type*/) const override { return builtin("mload"_yulstring); }
-	BuiltinFunctionForEVM const* storageStoreFunction(YulName /*_type*/) const override { return builtin("sstore"_yulstring); }
-	BuiltinFunctionForEVM const* storageLoadFunction(YulName /*_type*/) const override { return builtin("sload"_yulstring); }
-	YulName hashFunction(YulName /*_type*/) const override { return "keccak256"_yulstring; }
+	bool reservedIdentifier(std::string_view const _label) const override;
+
+	BuiltinFunctionForEVM const* discardFunction(YulName /*_type*/) const override { return builtin(YulNameRegistry::instance().idOf("pop")); }
+	BuiltinFunctionForEVM const* equalityFunction(YulName /*_type*/) const override { return builtin(YulNameRegistry::instance().idOf("eq")); }
+	BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtin(YulNameRegistry::instance().idOf("iszero")); }
+	BuiltinFunctionForEVM const* memoryStoreFunction(YulName /*_type*/) const override { return builtin(YulNameRegistry::instance().idOf("mstore")); }
+	BuiltinFunctionForEVM const* memoryLoadFunction(YulName /*_type*/) const override { return builtin(YulNameRegistry::instance().idOf("mload")); }
+	BuiltinFunctionForEVM const* storageStoreFunction(YulName /*_type*/) const override { return builtin(YulNameRegistry::instance().idOf("sstore")); }
+	BuiltinFunctionForEVM const* storageLoadFunction(YulName /*_type*/) const override { return builtin(YulNameRegistry::instance().idOf("sload")); }
+	YulName hashFunction(YulName /*_type*/) const override { return YulNameRegistry::instance().idOf("keccak256"); }
 
 	static EVMDialect const& strictAssemblyForEVM(langutil::EVMVersion _version);
 	static EVMDialect const& strictAssemblyForEVMObjects(langutil::EVMVersion _version);
@@ -99,6 +101,7 @@ protected:
 	langutil::EVMVersion const m_evmVersion;
 	std::map<YulName, BuiltinFunctionForEVM> m_functions;
 	std::map<std::pair<size_t, size_t>, std::shared_ptr<BuiltinFunctionForEVM const>> mutable m_verbatimFunctions;
+	std::set<YulNameLabel, std::less<>> m_reservedLabels;
 	std::set<YulName> m_reserved;
 };
 
@@ -115,13 +118,16 @@ protected:
 struct EVMDialectTyped: public EVMDialect
 {
 	/// Constructor, should only be used internally. Use the factory function below.
-	EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectAccess);
+	EVMDialectTyped(langutil::EVMVersion label, bool _objectAccess);
 
 	BuiltinFunctionForEVM const* discardFunction(YulName _type) const override;
 	BuiltinFunctionForEVM const* equalityFunction(YulName _type) const override;
-	BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtin("not"_yulstring); }
+	BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtin(YulNameRegistry::instance().reserved().instruction_not); }
 
 	static EVMDialectTyped const& instance(langutil::EVMVersion _version);
+
+	// type for popbool
+	YulName popboolType;
 };
 
 }

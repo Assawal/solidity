@@ -49,7 +49,7 @@ std::shared_ptr<Object> ObjectParser::parse(std::shared_ptr<Scanner> const& _sca
 		{
 			// Special case: Code-only form.
 			object = std::make_shared<Object>();
-			object->name = "object"_yulstring;
+			object->name = YulNameRegistry::instance().idOf("object");
 			auto sourceNameMapping = tryParseSourceNameMapping();
 			object->debugData = std::make_shared<ObjectDebugData>(ObjectDebugData{sourceNameMapping});
 			object->code = parseBlock(sourceNameMapping);
@@ -198,13 +198,13 @@ void ObjectParser::parseData(Object& _containingObject)
 YulName ObjectParser::parseUniqueName(Object const* _containingObject)
 {
 	expectToken(Token::StringLiteral, false);
-	YulName name{currentLiteral()};
-	if (name.empty())
+	auto const name = YulNameRegistry::instance().idOf(currentLiteral());
+	if (YulNameRegistry::instance().empty(name))
 		parserError(3287_error, "Object name cannot be empty.");
 	else if (_containingObject && _containingObject->name == name)
 		parserError(8311_error, "Object name cannot be the same as the name of the containing object.");
 	else if (_containingObject && _containingObject->subIndexByName.count(name))
-		parserError(8794_error, "Object name \"" + name.str() + "\" already exists inside the containing object.");
+		parserError(8794_error, "Object name \"" + currentLiteral() + "\" already exists inside the containing object.");
 	advance();
 	return name;
 }

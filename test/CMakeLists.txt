@@ -146,6 +146,7 @@ set(libyul_sources
     libyul/Inliner.cpp
     libyul/KnowledgeBaseTest.cpp
     libyul/Metrics.cpp
+    libyul/YulNameTest.cpp
     libyul/ObjectCompilerTest.cpp
     libyul/ObjectCompilerTest.h
     libyul/ObjectParser.cpp

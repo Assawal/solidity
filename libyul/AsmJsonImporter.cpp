@@ -71,8 +71,8 @@ Json AsmJsonImporter::member(Json const& _node, std::string const& _name)
 TypedName AsmJsonImporter::createTypedName(Json const& _node)
 {
 	auto typedName = createAsmNode<TypedName>(_node);
-	typedName.type = YulName{member(_node, "type").get<std::string>()};
-	typedName.name = YulName{member(_node, "name").get<std::string>()};
+	typedName.type = YulNameRegistry::instance().idOf(member(_node, "type").get<std::string>());
+	typedName.name = YulNameRegistry::instance().idOf(member(_node, "name").get<std::string>());
 	return typedName;
 }
 
@@ -165,26 +165,27 @@ Literal AsmJsonImporter::createLiteral(Json const& _node)
 	std::string kind = member(_node, "kind").get<std::string>();
 
 	solAssert(member(_node, "hexValue").is_string() || member(_node, "value").is_string(), "");
+	auto& registry = YulNameRegistry::instance();
 	if (_node.contains("hexValue"))
-		lit.value = YulName{util::asString(util::fromHex(member(_node, "hexValue").get<std::string>()))};
+		lit.value = registry.idOf(util::asString(util::fromHex(member(_node, "hexValue").get<std::string>())));
 	else
-		lit.value = YulName{member(_node, "value").get<std::string>()};
+		lit.value = registry.idOf(member(_node, "value").get<std::string>());
 
-	lit.type= YulName{member(_node, "type").get<std::string>()};
+	lit.type= registry.idOf(member(_node, "type").get<std::string>());
 
 	if (kind == "number")
 	{
-		langutil::CharStream charStream(lit.value.str(), "");
+		langutil::CharStream charStream(registry.resolve_s(lit.value), "");
 		langutil::Scanner scanner{charStream};
 		lit.kind = LiteralKind::Number;
 		yulAssert(
 			scanner.currentToken() == Token::Number,
-			"Expected number but got " + langutil::TokenTraits::friendlyName(scanner.currentToken()) + std::string(" while scanning ") + lit.value.str()
+			"Expected number but got " + langutil::TokenTraits::friendlyName(scanner.currentToken()) + std::string(" while scanning ") + registry.resolve_s(lit.value)
 		);
 	}
 	else if (kind == "bool")
 	{
-		langutil::CharStream charStream(lit.value.str(), "");
+		langutil::CharStream charStream(registry.resolve_s(lit.value), "");
 		langutil::Scanner scanner{charStream};
 		lit.kind = LiteralKind::Boolean;
 		yulAssert(
@@ -197,8 +198,8 @@ Literal AsmJsonImporter::createLiteral(Json const& _node)
 	{
 		lit.kind = LiteralKind::String;
 		yulAssert(
-			lit.value.str().size() <= 32,
-			"String literal too long (" + std::to_string(lit.value.str().size()) + " > 32)"
+			registry.resolve(lit.value).size() <= 32,
+			"String literal too long (" + std::to_string(registry.resolve(lit.value).size()) + " > 32)"
 		);
 	}
 	else
@@ -215,7 +216,7 @@ Leave AsmJsonImporter::createLeave(Json const& _node)
 Identifier AsmJsonImporter::createIdentifier(Json const& _node)
 {
 	auto identifier = createAsmNode<Identifier>(_node);
-	identifier.name = YulName(member(_node, "name").get<std::string>());
+	identifier.name = YulNameRegistry::instance().idOf(member(_node, "name").get<std::string>());
 	return identifier;
 }
 
@@ -265,7 +266,7 @@ VariableDeclaration AsmJsonImporter::createVariableDeclaration(Json const& _node
 FunctionDefinition AsmJsonImporter::createFunctionDefinition(Json const& _node)
 {
 	auto funcDef = createAsmNode<FunctionDefinition>(_node);
-	funcDef.name = YulName{member(_node, "name").get<std::string>()};
+	funcDef.name = YulNameRegistry::instance().idOf(member(_node, "name").get<std::string>());
 
 	if (_node.contains("parameters"))
 		for (auto const& var: member(_node, "parameters"))

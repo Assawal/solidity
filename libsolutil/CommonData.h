@@ -476,7 +476,7 @@ inline std::string asString(bytesConstRef _b)
 }
 
 /// Converts a string to a byte array containing the string's (byte) data.
-inline bytes asBytes(std::string const& _b)
+inline bytes asBytes(std::string_view const _b)
 {
 	return bytes((uint8_t const*)_b.data(), (uint8_t const*)(_b.data() + _b.size()));
 }
@@ -584,8 +584,8 @@ bool passesAddressChecksum(std::string const& _str, bool _strict);
 /// @param hex strings that look like an address
 std::string getChecksummedAddress(std::string const& _addr);
 
-bool isValidHex(std::string const& _string);
-bool isValidDecimal(std::string const& _string);
+bool isValidHex(std::string_view _string);
+bool isValidDecimal(std::string_view _string);
 
 /// @returns a quoted string if all characters are printable ASCII chars,
 /// or its hex representation otherwise.

@@ -61,12 +61,14 @@ void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 	std::map<YulName, AssignedValue> values;
 	for (auto const& [name, expression]: ssaValues.values())
 		values[name] = AssignedValue{expression, {}};
-	Expression const zeroLiteral{Literal{{}, LiteralKind::Number, YulName{"0"}, {}}};
-	Expression const oneLiteral{Literal{{}, LiteralKind::Number, YulName{"1"}, {}}};
-	Expression const thirtyTwoLiteral{Literal{{}, LiteralKind::Number, YulName{"32"}, {}}};
-	values[YulName{zero}] = AssignedValue{&zeroLiteral, {}};
-	values[YulName{one}] = AssignedValue{&oneLiteral, {}};
-	values[YulName{thirtyTwo}] = AssignedValue{&thirtyTwoLiteral, {}};
+	Expression const zeroLiteral{Literal{{}, LiteralKind::Number, YulNameRegistry::instance().reserved().ui0, {}}};
+	Expression const oneLiteral{Literal{{}, LiteralKind::Number, YulNameRegistry::instance().reserved().ui1, {}}};
+	Expression const thirtyTwoLiteral{Literal{{}, LiteralKind::Number, YulNameRegistry::instance().reserved().ui32, {}}};
+
+	// todo save
+	values[YulNameRegistry::instance().idOf(zero)] = AssignedValue{&zeroLiteral, {}};
+	values[YulNameRegistry::instance().idOf(one)] = AssignedValue{&oneLiteral, {}};
+	values[YulNameRegistry::instance().idOf(thirtyTwo)] = AssignedValue{&thirtyTwoLiteral, {}};
 
 	bool const ignoreMemory = MSizeFinder::containsMSize(_context.dialect, _ast);
 	UnusedStoreEliminator rse{

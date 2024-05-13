@@ -45,6 +45,7 @@
 #include <iosfwd>
 #include <string>
 #include <tuple>
+#include <map>
 
 namespace solidity::langutil
 {
@@ -375,6 +376,8 @@ namespace TokenTraits
 		// a warning from clang because it is always false.
 		return _token > Token::NonExperimentalEnd && _token < Token::ExperimentalEnd;
 	}
+
+	std::map<std::string, Token> const& yulKeywordsByName();
 
 	bool isYulKeyword(std::string const& _literal);
 

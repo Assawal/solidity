@@ -60,7 +60,7 @@ void ExpressionSimplifier::visit(Expression& _expression)
 						!knownToBeZero(startArgument) &&
 						!std::holds_alternative<FunctionCall>(startArgument)
 					)
-						startArgument = Literal{debugDataOf(startArgument), LiteralKind::Number, "0"_yulstring, {}};
+						startArgument = Literal{debugDataOf(startArgument), LiteralKind::Number, YulNameRegistry::instance().reserved().ui0, {}};
 				}
 }
 

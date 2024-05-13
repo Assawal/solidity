@@ -118,7 +118,7 @@ std::optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression c
 		return explore(identifier->name);
 	else if (FunctionCall const* f = std::get_if<FunctionCall>(&_value))
 	{
-		if (f->functionName.name == "add"_yulstring)
+		if (f->functionName.name == YulNameRegistry::instance().reserved().instruction_add)
 		{
 			if (std::optional<VariableOffset> a = explore(f->arguments[0]))
 				if (std::optional<VariableOffset> b = explore(f->arguments[1]))
@@ -132,7 +132,7 @@ std::optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression c
 						return VariableOffset{a->reference, offset};
 				}
 		}
-		else if (f->functionName.name == "sub"_yulstring)
+		else if (f->functionName.name == YulNameRegistry::instance().reserved().instruction_sub)
 			if (std::optional<VariableOffset> a = explore(f->arguments[0]))
 				if (std::optional<VariableOffset> b = explore(f->arguments[1]))
 				{
@@ -205,7 +205,7 @@ KnowledgeBase::VariableOffset KnowledgeBase::setOffset(YulName _variable, Variab
 	m_offsets[_variable] = _value;
 	// Constants are not tracked in m_groupMembers because
 	// the "representative" can never be reset.
-	if (!_value.reference.empty())
+	if (!YulNameRegistry::instance().empty(_value.reference))
 		m_groupMembers[_value.reference].insert(_variable);
 	return _value;
 }

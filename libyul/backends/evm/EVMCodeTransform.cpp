@@ -419,7 +419,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		m_assembly.markAsInvalid();
 		for (StackTooDeepError& stackError: subTransform.m_stackErrors)
 		{
-			if (stackError.functionName.empty())
+			if (YulNameRegistry::instance().empty(stackError.functionName))
 				stackError.functionName = _function.name;
 			m_stackErrors.emplace_back(std::move(stackError));
 		}
@@ -460,7 +460,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 				YulName{},
 				static_cast<int>(stackLayout.size()) - 17,
 				"The function " +
-				_function.name.str() +
+				YulNameRegistry::instance().resolve_s(_function.name) +
 				" has " +
 				std::to_string(stackLayout.size() - 17) +
 				" parameters or return variables too many to fit the stack size."
@@ -602,7 +602,7 @@ void CodeTransform::createFunctionEntryID(FunctionDefinition const& _function)
 			!nameAlreadySeen
 		) ?
 		m_assembly.namedLabel(
-			_function.name.str(),
+			YulNameRegistry::instance().resolve_s(_function.name),
 			_function.parameters.size(),
 			_function.returnVariables.size(),
 			astID
@@ -783,7 +783,7 @@ size_t CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulName _v
 			_varName,
 			heightDiff - limit,
 			"Variable " +
-			_varName.str() +
+			YulNameRegistry::instance().resolve_s(_varName) +
 			" is " +
 			std::to_string(heightDiff - limit) +
 			" slot(s) too deep inside the stack. " +

@@ -48,6 +48,8 @@ struct Block;
 
 struct TypedName;
 
+class YulNameRegistry;
+
 using Expression = std::variant<FunctionCall, Identifier, Literal>;
 using Statement = std::variant<ExpressionStatement, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Leave, Block>;
 

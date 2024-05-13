@@ -155,7 +155,7 @@ void CodeCost::operator()(Literal const& _literal)
 	case LiteralKind::Boolean:
 		break;
 	case LiteralKind::Number:
-		for (u256 n = u256(_literal.value.str()); n >= 0x100; n >>= 8)
+		for (u256 n = u256(YulNameRegistry::instance().resolve_s(_literal.value)); n >= 0x100; n >>= 8)
 			cost++;
 		if (valueOfLiteral(_literal) == 0)
 			if (auto evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
@@ -163,7 +163,7 @@ void CodeCost::operator()(Literal const& _literal)
 					--m_cost;
 		break;
 	case LiteralKind::String:
-		cost = _literal.value.str().size();
+		cost = YulNameRegistry::instance().resolve(_literal.value).size();
 		break;
 	}
 

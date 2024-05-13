@@ -119,7 +119,7 @@ YulName VarNameCleaner::stripSuffix(YulName const& _name) const
 	static std::regex const suffixRegex("(_+[0-9]+)+$");
 
 	std::smatch suffixMatch;
-	if (regex_search(_name.str(), suffixMatch, suffixRegex))
+	if (regex_search(_name.str(), suffixMatch, suffixRegex)) // literals? builtin names and type names?
 		return {YulName{suffixMatch.prefix().str()}};
 	return _name;
 }

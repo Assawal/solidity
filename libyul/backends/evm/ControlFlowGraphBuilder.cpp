@@ -336,8 +336,9 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 	langutil::DebugData::ConstPtr preSwitchDebugData = debugDataOf(_switch);
 
 	auto ghostVariableId = m_graph.ghostVariables.size();
-	YulName ghostVariableName("GHOST[" + std::to_string(ghostVariableId) + "]");
-	auto& ghostVar = m_graph.ghostVariables.emplace_back(Scope::Variable{""_yulstring, ghostVariableName});
+	auto &registry = YulNameRegistry::instance();
+	YulName const ghostVariableName = registry.idOf("GHOST[" + std::to_string(ghostVariableId) + "]");
+	auto& ghostVar = m_graph.ghostVariables.emplace_back(Scope::Variable{registry.emptyId(), ghostVariableName});
 
 	// Artificially generate:
 	// let <ghostVariable> := <switchExpression>
@@ -357,7 +358,7 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 	auto makeValueCompare = [&](Case const& _case) {
 		yul::FunctionCall const& ghostCall = m_graph.ghostCalls.emplace_back(yul::FunctionCall{
 			debugDataOf(_case),
-			yul::Identifier{{}, "eq"_yulstring},
+			yul::Identifier{{}, registry.reserved().eq},
 			{*_case.value, Identifier{{}, ghostVariableName}}
 		});
 		CFG::Operation& operation = m_currentBlock->operations.emplace_back(CFG::Operation{

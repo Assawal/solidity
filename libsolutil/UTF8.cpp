@@ -134,9 +134,9 @@ bool validateUTF8(unsigned char const* _input, size_t _length, size_t& _invalidP
 
 }
 
-bool validateUTF8(std::string const& _input, size_t& _invalidPosition)
+bool validateUTF8(std::string_view const _input, size_t& _invalidPosition)
 {
-	return validateUTF8(reinterpret_cast<unsigned char const*>(_input.c_str()), _input.length(), _invalidPosition);
+	return validateUTF8(reinterpret_cast<unsigned char const*>(_input.data()), _input.length(), _invalidPosition);
 }
 
 }

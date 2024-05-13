@@ -125,7 +125,7 @@ void LoadResolver::tryEvaluateKeccak(
 			{},
 			LiteralKind::Number,
 			// a dummy 256-bit number to represent the Keccak256 hash.
-			YulName{std::numeric_limits<u256>::max().str()},
+			YulNameRegistry::instance().idOf(std::numeric_limits<u256>::max().str()),
 			{}
 		}
 	);
@@ -149,7 +149,7 @@ void LoadResolver::tryEvaluateKeccak(
 			_e = Literal{
 				debugDataOf(_e),
 				LiteralKind::Number,
-				YulName{u256(keccak256(contentAsBytes)).str()},
+				YulNameRegistry::instance().idOf(u256(keccak256(contentAsBytes)).str()),
 				m_dialect.defaultType
 			};
 		}

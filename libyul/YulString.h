@@ -118,7 +118,7 @@ private:
 	std::unordered_multimap<std::uint64_t, size_t> m_hashToID = {{emptyHash(), 0}};
 };
 
-/// Wrapper around handles into the YulString repository.
+/*/// Wrapper around handles into the YulString repository.
 /// Equality of two YulStrings is determined by comparing their ID.
 /// The <-operator depends on the string hash and is not consistent
 /// with string comparisons (however, it is still deterministic).
@@ -165,11 +165,11 @@ private:
 inline YulString operator "" _yulstring(char const* _string, std::size_t _size)
 {
 	return YulString(std::string(_string, _size));
-}
+}*/
 
 }
 
-namespace fmt
+/*namespace fmt
 {
 template <>
 struct formatter<solidity::yul::YulString>
@@ -186,15 +186,16 @@ struct formatter<solidity::yul::YulString>
 		return format_to(_context.out(), "{}", _value.str());
 	}
 };
-}
+}*/
 
 namespace std
 {
+/*
 template<> struct hash<solidity::yul::YulString>
 {
 	size_t operator()(solidity::yul::YulString const& x) const
 	{
 		return static_cast<size_t>(x.hash());
 	}
-};
+};*/
 }

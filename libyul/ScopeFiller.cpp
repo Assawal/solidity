@@ -141,7 +141,7 @@ bool ScopeFiller::registerVariable(TypedName const& _name, SourceLocation const&
 		m_errorReporter.declarationError(
 			1395_error,
 			_location,
-			"Variable name " + _name.name.str() + " already taken in this scope."
+			"Variable name " + YulNameRegistry::instance().resolve_s(_name.name) + " already taken in this scope."
 		);
 		return false;
 	}
@@ -162,7 +162,7 @@ bool ScopeFiller::registerFunction(FunctionDefinition const& _funDef)
 		m_errorReporter.declarationError(
 			6052_error,
 			nativeLocationOf(_funDef),
-			"Function name " + _funDef.name.str() + " already taken in this scope."
+			"Function name " + YulNameRegistry::instance().resolve_s(_funDef.name) + " already taken in this scope."
 		);
 		return false;
 	}

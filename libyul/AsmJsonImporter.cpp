@@ -170,7 +170,7 @@ Literal AsmJsonImporter::createLiteral(Json const& _node)
 	else
 		lit.value = YulString{member(_node, "value").get<std::string>()};
 
-	lit.type= YulString{member(_node, "type").get<std::string>()};
+	lit.type = YulString{member(_node, "type").get<std::string>()};
 
 	if (kind == "number")
 	{

@@ -28,6 +28,8 @@
 
 #include <liblangutil/DebugData.h>
 
+#include <libsolutil/Numeric.h>
+
 #include <memory>
 #include <optional>
 
@@ -41,7 +43,7 @@ using TypedNameList = std::vector<TypedName>;
 
 /// Literal number or string (up to 32 bytes)
 enum class LiteralKind { Number, Boolean, String };
-struct Literal { langutil::DebugData::ConstPtr debugData; LiteralKind kind; YulString value; Type type; };
+struct Literal { langutil::DebugData::ConstPtr debugData; LiteralKind kind; u256 value; Type type; std::optional<std::string> formattingHint = {}; };
 /// External / internal identifier or label reference
 struct Identifier { langutil::DebugData::ConstPtr debugData; YulString name; };
 /// Assignment ("x := mload(20:u256)", expects push-1-expression on the right hand

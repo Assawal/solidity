@@ -102,7 +102,7 @@ public:
 	/// @returns the set of names of data objects accessible from within the code of
 	/// this object, including the name of object itself
 	/// Handles all names containing dots as reserved identifiers, not accessible as data.
-	std::set<YulString> qualifiedDataNames() const;
+	std::set<YulString> qualifiedDataNames() const; // todo can i return u256 here?
 
 	/// @returns vector of subIDs if possible to reach subobject with @a _qualifiedName, throws otherwise
 	/// For "B.C" should return vector of two values if success (subId of B and subId of C in B).

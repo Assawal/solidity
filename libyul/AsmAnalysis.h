@@ -62,16 +62,7 @@ public:
 		Dialect const& _dialect,
 		ExternalIdentifierAccess::Resolver _resolver = ExternalIdentifierAccess::Resolver(),
 		std::set<YulString> _dataNames = {}
-	):
-		m_resolver(std::move(_resolver)),
-		m_info(_analysisInfo),
-		m_errorReporter(_errorReporter),
-		m_dialect(_dialect),
-		m_dataNames(std::move(_dataNames))
-	{
-		if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
-			m_evmVersion = evmDialect->evmVersion();
-	}
+	);
 
 	bool analyze(Block const& _block);
 
@@ -128,7 +119,7 @@ private:
 	langutil::EVMVersion m_evmVersion;
 	Dialect const& m_dialect;
 	/// Names of data objects to be referenced by builtin functions with literal arguments.
-	std::set<YulString> m_dataNames;
+	std::set<u256> m_dataNames;
 	ForLoop const* m_currentForLoop = nullptr;
 	/// Worst side effects encountered during analysis (including within defined functions).
 	SideEffects m_sideEffects;

@@ -71,7 +71,7 @@ protected:
 	Token currentToken() const;
 	Token peekNextToken() const;
 	std::string tokenName(Token _token);
-	std::string currentLiteral() const;
+	std::string const& currentLiteral() const;
 	virtual Token advance();
 	///@}
 

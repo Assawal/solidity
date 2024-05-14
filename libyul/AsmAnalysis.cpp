@@ -37,6 +37,8 @@
 
 #include <libevmasm/Instruction.h>
 
+#include <range/v3/view/transform.hpp>
+
 #include <boost/algorithm/string.hpp>
 
 #include <fmt/format.h>
@@ -101,7 +103,7 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect,
 std::vector<YulString> AsmAnalyzer::operator()(Literal const& _literal)
 {
 	expectValidType(_literal.type, nativeLocationOf(_literal));
-	if (_literal.kind == LiteralKind::String && _literal.value.str().size() > 32)
+	if (_literal.kind == LiteralKind::String && _literal.formattingHint && _literal.formattingHint.value().str().size() > 32)
 		m_errorReporter.typeError(
 			3069_error,
 			nativeLocationOf(_literal),
@@ -110,7 +112,7 @@ std::vector<YulString> AsmAnalyzer::operator()(Literal const& _literal)
 	else if (_literal.kind == LiteralKind::Number && bigint(_literal.value.str()) > u256(-1))
 		m_errorReporter.typeError(6708_error, nativeLocationOf(_literal), "Number literal too large (> 256 bits)");
 	else if (_literal.kind == LiteralKind::Boolean)
-		yulAssert(_literal.value == "true"_yulstring || _literal.value == "false"_yulstring, "");
+		yulAssert(_literal.value == u256(0) || _literal.value == u256(1), "");
 
 	if (!m_dialect.validTypeForLiteral(_literal.kind, _literal.value, _literal.type))
 		m_errorReporter.typeError(
@@ -426,7 +428,8 @@ std::vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				}
 				else if (functionName.substr(0, "verbatim_"s.size()) == "verbatim_")
 				{
-					if (std::get<Literal>(arg).value.empty())
+					static auto empty = valueOfLiteral("", LiteralKind::String); // todo is this correct?
+					if (std::get<Literal>(arg).value == empty)
 						m_errorReporter.typeError(
 							1844_error,
 							nativeLocationOf(arg),
@@ -492,12 +495,12 @@ void AsmAnalyzer::operator()(Switch const& _switch)
 			(*this)(*_case.value);
 
 			/// Note: the parser ensures there is only one default case
-			if (watcher.ok() && !cases.insert(valueOfLiteral(*_case.value)).second)
+			if (watcher.ok() && !cases.insert(_case.value->value).second)
 				m_errorReporter.declarationError(
 					6792_error,
 					nativeLocationOf(_case),
 					"Duplicate case \"" +
-					valueOfLiteral(*_case.value).str() +
+					_case.value->value.str() +
 					"\" defined."
 				);
 		}
@@ -774,4 +777,19 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 bool AsmAnalyzer::validateInstructions(FunctionCall const& _functionCall)
 {
 	return validateInstructions(_functionCall.functionName.name.str(), nativeLocationOf(_functionCall.functionName));
+}
+AsmAnalyzer::AsmAnalyzer(
+	AsmAnalysisInfo& _analysisInfo,
+	ErrorReporter& _errorReporter,
+	const Dialect& _dialect,
+	ExternalIdentifierAccess::Resolver _resolver,
+	std::set<YulString> _dataNames):
+		m_resolver(std::move(_resolver)),
+		m_info(_analysisInfo),
+		m_errorReporter(_errorReporter),
+		m_dialect(_dialect),
+		m_dataNames(_dataNames | ranges::views::transform([](auto const& yulString) { return valueOfLiteral(yulString.str(), LiteralKind::String); }) | ranges::to<std::set<u256>>)
+{
+	if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+		m_evmVersion = evmDialect->evmVersion();
 }

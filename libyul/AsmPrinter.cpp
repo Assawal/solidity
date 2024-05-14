@@ -52,8 +52,8 @@ std::string AsmPrinter::operator()(Literal const& _literal)
 		yulAssert(isValidDecimal(_literal.value.str()) || isValidHex(_literal.value.str()), "Invalid number literal");
 		return locationComment + _literal.value.str() + appendTypeName(_literal.type);
 	case LiteralKind::Boolean:
-		yulAssert(_literal.value == "true"_yulstring || _literal.value == "false"_yulstring, "Invalid bool literal.");
-		return locationComment + ((_literal.value == "true"_yulstring) ? "true" : "false") + appendTypeName(_literal.type, true);
+		yulAssert(_literal.value == u256(0) || _literal.value == u256(1), "Invalid bool literal.");
+		return locationComment + ((_literal.value == u256(1)) ? "true" : "false") + appendTypeName(_literal.type, true);
 	case LiteralKind::String:
 		break;
 	}

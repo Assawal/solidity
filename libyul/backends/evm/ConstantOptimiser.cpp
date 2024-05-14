@@ -81,7 +81,7 @@ struct MiniEVMInterpreter
 	}
 	u256 operator()(Literal const& _literal)
 	{
-		return valueOfLiteral(_literal);
+		return _literal.value;
 	}
 	u256 operator()(Identifier const&) { yulAssert(false, ""); }
 
@@ -100,7 +100,7 @@ void ConstantOptimiser::visit(Expression& _e)
 		if (
 			Expression const* repr =
 				RepresentationFinder(m_dialect, m_meter, debugDataOf(_e), m_cache)
-				.tryFindRepresentation(valueOfLiteral(literal))
+				.tryFindRepresentation(literal.value)
 		)
 			_e = ASTCopier{}.translate(*repr);
 	}

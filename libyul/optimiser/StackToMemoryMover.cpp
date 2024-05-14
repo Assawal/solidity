@@ -37,7 +37,7 @@ namespace
 std::vector<Statement> generateMemoryStore(
 	Dialect const& _dialect,
 	langutil::DebugData::ConstPtr const& _debugData,
-	YulString _mpos,
+	u256 const& _mpos,
 	Expression _value
 )
 {
@@ -55,7 +55,7 @@ std::vector<Statement> generateMemoryStore(
 	return result;
 }
 
-FunctionCall generateMemoryLoad(Dialect const& _dialect, langutil::DebugData::ConstPtr const& _debugData, YulString _mpos)
+FunctionCall generateMemoryLoad(Dialect const& _dialect, langutil::DebugData::ConstPtr const& _debugData, u256 const& _mpos)
 {
 	BuiltinFunction const* memoryLoadFunction = _dialect.memoryLoadFunction(_dialect.defaultType);
 	yulAssert(memoryLoadFunction, "");
@@ -75,7 +75,7 @@ FunctionCall generateMemoryLoad(Dialect const& _dialect, langutil::DebugData::Co
 
 void StackToMemoryMover::run(
 	OptimiserStepContext& _context,
-	u256 _reservedMemory,
+	u256 const& _reservedMemory,
 	std::map<YulString, uint64_t> const& _memorySlots,
 	uint64_t _numRequiredSlots,
 	Block& _block
@@ -139,7 +139,7 @@ void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 				m_context.dialect,
 				returnVariable.debugData,
 				*slot,
-				Literal{returnVariable.debugData, LiteralKind::Number, "0"_yulstring, {}}
+				Literal{returnVariable.debugData, LiteralKind::Number, 0, {}}
 			);
 
 	// Special case of a function with a single return argument that needs to move to memory.
@@ -208,36 +208,36 @@ void StackToMemoryMover::operator()(Block& _block)
 		auto debugData = _stmt.debugData;
 		if (_lhsVars.size() == 1)
 		{
-			if (std::optional<YulString> offset = m_memoryOffsetTracker(_lhsVars.front().name))
+			if (auto const offset = m_memoryOffsetTracker(_lhsVars.front().name))
 				return generateMemoryStore(
 					m_context.dialect,
 					debugData,
 					*offset,
-					_stmt.value ? *std::move(_stmt.value) : Literal{debugData, LiteralKind::Number, "0"_yulstring, {}}
+					_stmt.value ? *std::move(_stmt.value) : Literal{debugData, LiteralKind::Number, 0, {}}
 				);
 			else
 				return {};
 		}
-		std::vector<std::optional<YulString>> rhsMemorySlots;
+		std::vector<std::optional<u256>> rhsMemorySlots;
 		if (_stmt.value)
 		{
 			FunctionCall const* functionCall = std::get_if<FunctionCall>(_stmt.value.get());
 			yulAssert(functionCall, "");
 			if (m_context.dialect.builtin(functionCall->functionName.name))
-				rhsMemorySlots = std::vector<std::optional<YulString>>(_lhsVars.size(), std::nullopt);
+				rhsMemorySlots = std::vector<std::optional<u256>>(_lhsVars.size(), std::nullopt);
 			else
 				rhsMemorySlots =
 					m_functionReturnVariables.at(functionCall->functionName.name) |
 					ranges::views::transform(m_memoryOffsetTracker) |
-					ranges::to<std::vector<std::optional<YulString>>>;
+					ranges::to<std::vector<std::optional<u256>>>;
 		}
 		else
-			rhsMemorySlots = std::vector<std::optional<YulString>>(_lhsVars.size(), std::nullopt);
+			rhsMemorySlots = std::vector<std::optional<u256>>(_lhsVars.size(), std::nullopt);
 
 		// Nothing to do, if the right-hand-side remains entirely on the stack and
 		// none of the variables in the left-hand-side are moved.
 		if (
-			ranges::none_of(rhsMemorySlots, [](std::optional<YulString> const& _slot) { return _slot.has_value(); }) &&
+			ranges::none_of(rhsMemorySlots, [](std::optional<u256> const& _slot) { return _slot.has_value(); }) &&
 			!util::contains_if(_lhsVars, m_memoryOffsetTracker)
 		)
 			return {};
@@ -259,7 +259,7 @@ void StackToMemoryMover::operator()(Block& _block)
 				rhs = std::make_unique<Expression>(Identifier{debugData, tempVarName});
 			}
 
-			if (std::optional<YulString> offset = m_memoryOffsetTracker(lhsVar.name))
+			if (auto const offset = m_memoryOffsetTracker(lhsVar.name))
 				memoryAssignments += generateMemoryStore(
 					m_context.dialect,
 					_stmt.debugData,
@@ -303,29 +303,29 @@ void StackToMemoryMover::operator()(Block& _block)
 void StackToMemoryMover::visit(Expression& _expression)
 {
 	ASTModifier::visit(_expression);
-	if (Identifier* identifier = std::get_if<Identifier>(&_expression))
-		if (std::optional<YulString> offset = m_memoryOffsetTracker(identifier->name))
+	if (auto* identifier = std::get_if<Identifier>(&_expression))
+		if (auto const offset = m_memoryOffsetTracker(identifier->name))
 			_expression = generateMemoryLoad(m_context.dialect, identifier->debugData, *offset);
 }
 
-std::optional<YulString> StackToMemoryMover::VariableMemoryOffsetTracker::operator()(YulString _variable) const
+std::optional<u256> StackToMemoryMover::VariableMemoryOffsetTracker::operator()(YulString _variable) const
 {
 	if (m_memorySlots.count(_variable))
 	{
 		uint64_t slot = m_memorySlots.at(_variable);
 		yulAssert(slot < m_numRequiredSlots, "");
-		return YulString{toCompactHexWithPrefix(m_reservedMemory + 32 * (m_numRequiredSlots - slot - 1))};
+		return u256(toCompactHexWithPrefix(m_reservedMemory + 32 * (m_numRequiredSlots - slot - 1)));
 	}
 	else
 		return std::nullopt;
 }
 
-std::optional<YulString> StackToMemoryMover::VariableMemoryOffsetTracker::operator()(TypedName const& _variable) const
+std::optional<u256> StackToMemoryMover::VariableMemoryOffsetTracker::operator()(TypedName const& _variable) const
 {
 	return (*this)(_variable.name);
 }
 
-std::optional<YulString> StackToMemoryMover::VariableMemoryOffsetTracker::operator()(Identifier const& _variable) const
+std::optional<u256> StackToMemoryMover::VariableMemoryOffsetTracker::operator()(Identifier const& _variable) const
 {
 	return (*this)(_variable.name);
 }

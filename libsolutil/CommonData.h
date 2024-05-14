@@ -460,7 +460,7 @@ int fromHex(char _i, WhenError _throw);
 /// Converts a (printable) ASCII hex string into the corresponding byte stream.
 /// @example fromHex("41626261") == asBytes("Abba")
 /// If _throw = ThrowType::DontThrow, it replaces bad hex characters with 0's, otherwise it will throw an exception.
-bytes fromHex(std::string const& _s, WhenError _throw = WhenError::DontThrow);
+bytes fromHex(std::string_view _s, WhenError _throw = WhenError::DontThrow);
 /// Converts byte array to a string containing the same (binary) data. Unless
 /// the byte array happens to contain ASCII data, this won't be printable.
 inline std::string asString(bytes const& _b)
@@ -476,10 +476,15 @@ inline std::string asString(bytesConstRef _b)
 }
 
 /// Converts a string to a byte array containing the string's (byte) data.
-inline bytes asBytes(std::string const& _b)
+inline bytes asBytes(std::string_view const _b)
 {
 	return bytes((uint8_t const*)_b.data(), (uint8_t const*)(_b.data() + _b.size()));
 }
+
+/*inline bytes asBytes(std::string_view const _b)
+{
+	return bytes((uint8_t const*)_b.data(), (uint8_t const*)(_b.data() + _b.size()));
+}*/
 
 template <class T, class V>
 bool contains(T const& _t, V const& _v)
@@ -584,8 +589,8 @@ bool passesAddressChecksum(std::string const& _str, bool _strict);
 /// @param hex strings that look like an address
 std::string getChecksummedAddress(std::string const& _addr);
 
-bool isValidHex(std::string const& _string);
-bool isValidDecimal(std::string const& _string);
+bool isValidHex(std::string_view _string);
+bool isValidDecimal(std::string_view _string);
 
 /// @returns a quoted string if all characters are printable ASCII chars,
 /// or its hex representation otherwise.

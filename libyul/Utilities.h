@@ -30,10 +30,10 @@ namespace solidity::yul
 
 std::string reindent(std::string const& _code);
 
-u256 valueOfNumberLiteral(Literal const& _literal);
-u256 valueOfStringLiteral(Literal const& _literal);
-u256 valueOfBoolLiteral(Literal const& _literal);
-u256 valueOfLiteral(Literal const& _literal);
+u256 valueOfNumberLiteral(std::string_view _value);
+u256 valueOfStringLiteral(std::string_view _value);
+u256 valueOfBoolLiteral(std::string_view _value);
+u256 valueOfLiteral(std::string_view _value, LiteralKind _kind);
 
 /**
  * Linear order on Yul AST nodes.

@@ -34,6 +34,7 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include "Utilities.h"
 #include <algorithm>
 #include <regex>
 
@@ -534,9 +535,12 @@ std::variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 		Literal literal{
 			createDebugData(),
 			kind,
-			YulString{currentLiteral()},
+			valueOfLiteral(currentLiteral(), kind),
 			kind == LiteralKind::Boolean ? m_dialect.boolType : m_dialect.defaultType
 		};
+		if(kind == LiteralKind::String) {
+			literal.formattingHint = YulString(currentLiteral());
+		}
 		advance();
 		if (currentToken() == Token::Colon)
 		{

@@ -112,10 +112,14 @@ public:
 		}
 	}
 
-	/// Explicitly construct, copying from a string.
 	explicit FixedHash(std::string const& _s, ConstructFromStringType _t = FromHex, ConstructFromHashType _ht = FailIfDifferent):
 		FixedHash(_t == FromHex ? fromHex(_s, WhenError::Throw) : solidity::util::asBytes(_s), _ht)
 	{}
+
+	static FixedHash from_string_view(std::string_view const _s, ConstructFromStringType _t = FromHex, ConstructFromHashType _ht = FailIfDifferent) {
+		// avoid ambiguity conflict with main ctor
+		return FixedHash(FixedHash(_t == FromHex ? fromHex(_s, WhenError::Throw) : solidity::util::asBytes(_s), _ht));
+	}
 
 	/// Convert to arithmetic type.
 	operator Arith() const { return fromBigEndian<Arith>(m_data); }

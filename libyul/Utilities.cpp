@@ -86,56 +86,46 @@ std::string solidity::yul::reindent(std::string const& _code)
 	return out.str();
 }
 
-u256 solidity::yul::valueOfNumberLiteral(Literal const& _literal)
+u256 solidity::yul::valueOfNumberLiteral(std::string_view const _value)
 {
-	return _literal.value;
-	/*yulAssert(_literal.kind == LiteralKind::Number, "Expected number literal!");
-
-	static std::map<YulString, u256> numberCache;
+	static std::map<std::string, u256, std::less<>> numberCache;
 	static YulStringRepository::ResetCallback callback{[&] { numberCache.clear(); }};
 
-	auto&& [it, isNew] = numberCache.try_emplace(_literal.value, 0);
+	auto&& [it, isNew] = numberCache.try_emplace(std::string(_value), 0);
 	if (isNew)
 	{
-		std::string const& literalString = _literal.value.str();
-		yulAssert(isValidDecimal(literalString) || isValidHex(literalString), "Invalid number literal!");
-		it->second = u256(literalString);
+		yulAssert(isValidDecimal(_value) || isValidHex(_value), "Invalid number literal!");
+		it->second = u256(_value);
 	}
-	return it->second;*/
+	return it->second;
 }
 
-u256 solidity::yul::valueOfStringLiteral(Literal const& _literal)
+u256 solidity::yul::valueOfStringLiteral(std::string_view const _value)
 {
-	/*yulAssert(_literal.kind == LiteralKind::String, "Expected string literal!");
-	yulAssert(_literal.value.str().size() <= 32, "Literal string too long!");
-
-	return u256(h256(_literal.value.str(), h256::FromBinary, h256::AlignLeft));*/
-	return _literal.value;
+	yulAssert(_value.size() <= 32, "Literal string too long!");
+	return u256(h256::from_string_view(_value, h256::FromBinary, h256::AlignLeft));
 }
 
-u256 yul::valueOfBoolLiteral(Literal const& _literal)
+u256 yul::valueOfBoolLiteral(std::string_view const _value)
 {
-	/*yulAssert(_literal.kind == LiteralKind::Boolean, "Expected bool literal!");
+	if (_value == "true")
+		return {1};
+	else if (_value == "false")
+		return {0};
 
-	if (_literal.value == "true"_yulstring)
-		return u256(1);
-	else if (_literal.value == "false"_yulstring)
-		return u256(0);
-
-	yulAssert(false, "Unexpected bool literal value!");*/
-	return _literal.value;
+	yulAssert(false, "Unexpected bool literal value!");
 }
 
-u256 solidity::yul::valueOfLiteral(Literal const& _literal)
+u256 solidity::yul::valueOfLiteral(std::string_view const _value, LiteralKind const _kind)
 {
-	switch (_literal.kind)
+	switch (_kind)
 	{
 		case LiteralKind::Number:
-			return valueOfNumberLiteral(_literal);
+			return valueOfNumberLiteral(_value);
 		case LiteralKind::Boolean:
-			return valueOfBoolLiteral(_literal);
+			return valueOfBoolLiteral(_value);
 		case LiteralKind::String:
-			return valueOfStringLiteral(_literal);
+			return valueOfStringLiteral(_value);
 		default:
 			yulAssert(false, "Unexpected literal kind!");
 	}
@@ -147,10 +137,7 @@ bool Less<Literal>::operator()(Literal const& _lhs, Literal const& _rhs) const
 	if (std::make_tuple(_lhs.kind, _lhs.type) != std::make_tuple(_rhs.kind, _rhs.type))
 		return std::make_tuple(_lhs.kind, _lhs.type) < std::make_tuple(_rhs.kind, _rhs.type);
 
-	if (_lhs.kind == LiteralKind::Number)
-		return valueOfNumberLiteral(_lhs) < valueOfNumberLiteral(_rhs);
-	else
-		return _lhs.value < _rhs.value;
+	return _lhs.value < _rhs.value;
 }
 
 bool SwitchCaseCompareByLiteralValue::operator()(Case const* _lhs, Case const* _rhs) const

@@ -41,7 +41,7 @@ Literal Dialect::trueLiteral() const
 		return {DebugData::create(), LiteralKind::Number, u256(1), defaultType};
 }
 
-bool Dialect::validTypeForLiteral(LiteralKind _kind, YulString, YulString _type) const
+bool Dialect::validTypeForLiteral(LiteralKind _kind, u256 const&, YulString _type) const
 {
 	if (_kind == LiteralKind::Boolean)
 		return _type == boolType;

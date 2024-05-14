@@ -32,6 +32,7 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include "Utilities.h"
 #include <vector>
 
 using namespace solidity::langutil;
@@ -165,16 +166,17 @@ Literal AsmJsonImporter::createLiteral(Json const& _node)
 	std::string kind = member(_node, "kind").get<std::string>();
 
 	solAssert(member(_node, "hexValue").is_string() || member(_node, "value").is_string(), "");
+	std::string value;
 	if (_node.contains("hexValue"))
-		lit.value = YulString{util::asString(util::fromHex(member(_node, "hexValue").get<std::string>()))};
+		value = util::asString(util::fromHex(member(_node, "hexValue").get<std::string>()));
 	else
-		lit.value = YulString{member(_node, "value").get<std::string>()};
+		value = member(_node, "value").get<std::string>();
 
 	lit.type = YulString{member(_node, "type").get<std::string>()};
 
 	if (kind == "number")
 	{
-		langutil::CharStream charStream(lit.value.str(), "");
+		langutil::CharStream charStream(value, "");
 		langutil::Scanner scanner{charStream};
 		lit.kind = LiteralKind::Number;
 		yulAssert(
@@ -184,7 +186,7 @@ Literal AsmJsonImporter::createLiteral(Json const& _node)
 	}
 	else if (kind == "bool")
 	{
-		langutil::CharStream charStream(lit.value.str(), "");
+		langutil::CharStream charStream(value, "");
 		langutil::Scanner scanner{charStream};
 		lit.kind = LiteralKind::Boolean;
 		yulAssert(
@@ -197,12 +199,15 @@ Literal AsmJsonImporter::createLiteral(Json const& _node)
 	{
 		lit.kind = LiteralKind::String;
 		yulAssert(
-			lit.value.str().size() <= 32,
+			value.size() <= 32,
 			"String literal too long (" + std::to_string(lit.value.str().size()) + " > 32)"
 		);
+		lit.formattingHint = YulString(value);
 	}
 	else
 		yulAssert(false, "unknown type of literal");
+
+	lit.value = valueOfLiteral(value, lit.kind);
 
 	return lit;
 }

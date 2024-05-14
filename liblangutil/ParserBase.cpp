@@ -43,7 +43,7 @@ Token ParserBase::peekNextToken() const
 	return m_scanner->peekNextToken();
 }
 
-std::string ParserBase::currentLiteral() const
+std::string const& ParserBase::currentLiteral() const
 {
 	return m_scanner->currentLiteral();
 }

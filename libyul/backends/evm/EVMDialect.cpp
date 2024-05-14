@@ -236,7 +236,7 @@ std::map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _
 				yulAssert(_call.arguments.size() == 1, "");
 				Literal const* literal = std::get_if<Literal>(&_call.arguments.front());
 				yulAssert(literal, "");
-				_assembly.appendConstant(valueOfLiteral(*literal));
+				_assembly.appendConstant(literal->value);
 			})
 		);
 
@@ -248,7 +248,8 @@ std::map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _
 			yulAssert(_context.currentObject, "No object available.");
 			yulAssert(_call.arguments.size() == 1, "");
 			Expression const& arg = _call.arguments.front();
-			YulString dataName = std::get<Literal>(arg).value;
+			auto const& lit = std::get<Literal>(arg);
+			auto const dataName = lit.formattingHint ? lit.formattingHint.value() : YulString(lit.value.str());
 			if (_context.currentObject->name == dataName)
 				_assembly.appendAssemblySize();
 			else
@@ -269,7 +270,8 @@ std::map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _
 			yulAssert(_context.currentObject, "No object available.");
 			yulAssert(_call.arguments.size() == 1, "");
 			Expression const& arg = _call.arguments.front();
-			YulString dataName = std::get<Literal>(arg).value;
+			auto const& lit = std::get<Literal>(arg);
+			auto const dataName = lit.formattingHint ? lit.formattingHint.value() : YulString(lit.value.str());
 			if (_context.currentObject->name == dataName)
 				_assembly.appendConstant(0);
 			else
@@ -328,7 +330,7 @@ std::map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _
 				BuiltinContext&
 			) {
 				yulAssert(_call.arguments.size() == 3, "");
-				YulString identifier = std::get<Literal>(_call.arguments[1]).value;
+				auto const identifier = std::get<Literal>(_call.arguments[1]).value;
 				_assembly.appendImmutableAssignment(identifier.str());
 			}
 		));

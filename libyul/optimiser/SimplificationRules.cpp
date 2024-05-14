@@ -241,7 +241,7 @@ Expression Pattern::toExpression(langutil::DebugData::ConstPtr const& _debugData
 	if (m_kind == PatternKind::Constant)
 	{
 		assertThrow(m_data, OptimizerException, "No match group and no constant value given.");
-		return Literal{_debugData, LiteralKind::Number, YulString{formatNumber(*m_data)}, {}};
+		return Literal{_debugData, LiteralKind::Number, *m_data, {}};
 	}
 	else if (m_kind == PatternKind::Operation)
 	{
@@ -261,7 +261,7 @@ Expression Pattern::toExpression(langutil::DebugData::ConstPtr const& _debugData
 
 u256 Pattern::d() const
 {
-	return valueOfNumberLiteral(std::get<Literal>(matchGroupValue()));
+	return std::get<Literal>(matchGroupValue()).value;
 }
 
 Expression const& Pattern::matchGroupValue() const

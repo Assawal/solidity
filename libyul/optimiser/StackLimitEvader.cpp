@@ -108,12 +108,12 @@ struct MemoryOffsetAllocator
 	std::map<YulString, uint64_t> slotsRequiredForFunction{};
 };
 
-u256 literalArgumentValue(FunctionCall const& _call)
+u256 const& literalArgumentValue(FunctionCall const& _call)
 {
 	yulAssert(_call.arguments.size() == 1, "");
 	Literal const* literal = std::get_if<Literal>(&_call.arguments.front());
 	yulAssert(literal && literal->kind == LiteralKind::Number, "");
-	return valueOfLiteral(*literal);
+	return literal->value;
 }
 }
 
@@ -208,8 +208,8 @@ void StackLimitEvader::run(
 	reservedMemory += 32 * requiredSlots;
 	for (FunctionCall* memoryGuardCall: FunctionCallFinder::run(*_object.code, "memoryguard"_yulstring))
 	{
-		Literal* literal = std::get_if<Literal>(&memoryGuardCall->arguments.front());
+		auto* literal = std::get_if<Literal>(&memoryGuardCall->arguments.front());
 		yulAssert(literal && literal->kind == LiteralKind::Number, "");
-		literal->value = YulString{toCompactHexWithPrefix(reservedMemory)};
+		literal->value = u256{toCompactHexWithPrefix(reservedMemory)};
 	}
 }

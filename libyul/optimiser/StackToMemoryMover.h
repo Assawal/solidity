@@ -29,6 +29,7 @@
 #include <libsolutil/Numeric.h>
 
 #include <list>
+#include <utility>
 
 namespace solidity::yul
 {
@@ -141,7 +142,7 @@ public:
 	 */
 	static void run(
 		OptimiserStepContext& _context,
-		u256 _reservedMemory,
+		u256 const& _reservedMemory,
 		std::map<YulString, uint64_t> const& _memorySlots,
 		uint64_t _numRequiredSlots,
 		Block& _block
@@ -160,18 +161,18 @@ private:
 			u256 _reservedMemory,
 			std::map<YulString, uint64_t> const& _memorySlots,
 			uint64_t _numRequiredSlots
-		): m_reservedMemory(_reservedMemory), m_memorySlots(_memorySlots), m_numRequiredSlots(_numRequiredSlots)
+		): m_reservedMemory(std::move(_reservedMemory)), m_memorySlots(_memorySlots), m_numRequiredSlots(_numRequiredSlots)
 		{}
 
 		/// @returns a YulString containing the memory offset to be assigned to @a _variable as number literal
 		/// or std::nullopt if the variable should not be moved.
-		std::optional<YulString> operator()(YulString _variable) const;
+		std::optional<u256> operator()(YulString _variable) const;
 		/// @returns a YulString containing the memory offset to be assigned to @a _variable as number literal
 		/// or std::nullopt if the variable should not be moved.
-		std::optional<YulString> operator()(TypedName const& _variable) const;
+		std::optional<u256> operator()(TypedName const& _variable) const;
 		/// @returns a YulString containing the memory offset to be assigned to @a _variable as number literal
 		/// or std::nullopt if the variable should not be moved.
-		std::optional<YulString> operator()(Identifier const& _variable) const;
+		std::optional<u256> operator()(Identifier const& _variable) const;
 
 	private:
 		u256 m_reservedMemory;

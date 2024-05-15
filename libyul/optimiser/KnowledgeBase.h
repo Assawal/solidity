@@ -72,8 +72,8 @@ public:
 	std::optional<u256> differenceIfKnownConstant(YulString _a, YulString _b);
 	bool knownToBeDifferentByAtLeast32(YulString _a, YulString _b);
 	bool knownToBeZero(YulString _a);
-	std::optional<u256> valueIfKnownConstant(YulString _a);
-	std::optional<u256> valueIfKnownConstant(Expression const& _expression);
+	std::optional<LiteralValue> valueIfKnownConstant(YulString _a);
+	std::optional<LiteralValue> valueIfKnownConstant(Expression const& _expression);
 
 private:
 	/**

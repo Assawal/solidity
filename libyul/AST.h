@@ -32,6 +32,7 @@
 
 #include <memory>
 #include <optional>
+#include <utility>
 
 namespace solidity::yul
 {
@@ -43,7 +44,20 @@ using TypedNameList = std::vector<TypedName>;
 
 /// Literal number or string (up to 32 bytes)
 enum class LiteralKind { Number, Boolean, String };
-struct Literal { langutil::DebugData::ConstPtr debugData; LiteralKind kind; u256 value; Type type; std::optional<YulString> formattingHint = {}; };
+struct LiteralValue {
+	using Data = u256;
+	using RepresentationHint = 	std::optional<std::string>;
+
+	LiteralValue& operator=(u256 const& _v) { data = _v; return *this; }
+	bool operator<(LiteralValue const& _rhs) const { return data < _rhs.data; }
+	bool operator==(LiteralValue const& _rhs) const { return data == _rhs.data; }
+	bool operator<(Data const& _rhs) const { return data < _rhs; }
+	bool operator==(Data const& _rhs) const { return data == _rhs; }
+
+	Data data;
+	RepresentationHint representationHint {std::nullopt};
+};
+struct Literal { langutil::DebugData::ConstPtr debugData; LiteralKind kind{}; LiteralValue value; Type type; };
 /// External / internal identifier or label reference
 struct Identifier { langutil::DebugData::ConstPtr debugData; YulString name; };
 /// Assignment ("x := mload(20:u256)", expects push-1-expression on the right hand

@@ -535,12 +535,9 @@ std::variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 		Literal literal{
 			createDebugData(),
 			kind,
-			valueOfLiteral(currentLiteral(), kind),
+			{valueOfLiteral(currentLiteral(), kind), currentLiteral()},
 			kind == LiteralKind::Boolean ? m_dialect.boolType : m_dialect.defaultType
 		};
-		if(kind == LiteralKind::String) {
-			literal.formattingHint = YulString(currentLiteral());
-		}
 		advance();
 		if (currentToken() == Token::Colon)
 		{

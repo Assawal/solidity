@@ -34,8 +34,9 @@
 
 #include <range/v3/view/transform.hpp>
 
-#include <memory>
+#include "Utilities.h"
 #include <functional>
+#include <memory>
 
 using namespace solidity;
 using namespace solidity::langutil;
@@ -46,11 +47,17 @@ std::string AsmPrinter::operator()(Literal const& _literal)
 {
 	std::string const locationComment = formatDebugData(_literal);
 
+	if(_literal.value.representationHint && _literal.value == valueOfLiteral(*_literal.value.representationHint, _literal.kind))
+	{
+		auto const repr = LiteralKind::String == _literal.kind ? escapeAndQuoteString(*_literal.value.representationHint) : *_literal.value.representationHint;
+		return locationComment + repr + appendTypeName(_literal.type, LiteralKind::Boolean == _literal.kind);
+	}
+
 	switch (_literal.kind)
 	{
 	case LiteralKind::Number:
-		yulAssert(isValidDecimal(_literal.value.str()) || isValidHex(_literal.value.str()), "Invalid number literal");
-		return locationComment + _literal.value.str() + appendTypeName(_literal.type);
+		yulAssert(isValidDecimal(_literal.value.data.str()) || isValidHex(_literal.value.data.str()), "Invalid number literal");
+		return locationComment + formatNumber(_literal.value.data) + appendTypeName(_literal.type);
 	case LiteralKind::Boolean:
 		yulAssert(_literal.value == u256(0) || _literal.value == u256(1), "Invalid bool literal.");
 		return locationComment + ((_literal.value == u256(1)) ? "true" : "false") + appendTypeName(_literal.type, true);
@@ -58,7 +65,7 @@ std::string AsmPrinter::operator()(Literal const& _literal)
 		break;
 	}
 
-	return locationComment + escapeAndQuoteString(_literal.value.str()) + appendTypeName(_literal.type);
+	return locationComment + escapeAndQuoteString(literalToString(_literal)) + appendTypeName(_literal.type);
 }
 
 std::string AsmPrinter::operator()(Identifier const& _identifier)

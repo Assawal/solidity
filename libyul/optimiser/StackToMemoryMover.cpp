@@ -38,6 +38,7 @@ std::vector<Statement> generateMemoryStore(
 	Dialect const& _dialect,
 	langutil::DebugData::ConstPtr const& _debugData,
 	u256 const& _mpos,
+	std::optional<std::string> const& _hint,
 	Expression _value
 )
 {
@@ -48,14 +49,14 @@ std::vector<Statement> generateMemoryStore(
 		_debugData,
 		Identifier{_debugData, memoryStoreFunction->name},
 		{
-			Literal{_debugData, LiteralKind::Number, _mpos, {}},
+			Literal{_debugData, LiteralKind::Number, _mpos, {}, _hint},
 			std::move(_value)
 		}
 	}});
 	return result;
 }
 
-FunctionCall generateMemoryLoad(Dialect const& _dialect, langutil::DebugData::ConstPtr const& _debugData, u256 const& _mpos)
+FunctionCall generateMemoryLoad(Dialect const& _dialect, langutil::DebugData::ConstPtr const& _debugData, u256 const& _mpos, std::optional<std::string> const& _hint)
 {
 	BuiltinFunction const* memoryLoadFunction = _dialect.memoryLoadFunction(_dialect.defaultType);
 	yulAssert(memoryLoadFunction, "");
@@ -66,7 +67,8 @@ FunctionCall generateMemoryLoad(Dialect const& _dialect, langutil::DebugData::Co
 				_debugData,
 				LiteralKind::Number,
 				_mpos,
-				{}
+				{},
+				_hint
 			}
 		}
 	};
@@ -129,7 +131,8 @@ void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 				m_context.dialect,
 				param.debugData,
 				*slot,
-				Identifier{param.debugData, param.name}
+				Identifier{param.debugData, param.name},
+
 			);
 
 	// All memory return variables have to be initialized to zero in memory.

@@ -103,7 +103,7 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect,
 std::vector<YulString> AsmAnalyzer::operator()(Literal const& _literal)
 {
 	expectValidType(_literal.type, nativeLocationOf(_literal));
-	if (_literal.kind == LiteralKind::String && _literal.formattingHint && _literal.formattingHint.value().str().size() > 32)
+	if (_literal.kind == LiteralKind::String && literalToString(_literal).size() > 32)
 		m_errorReporter.typeError(
 			3069_error,
 			nativeLocationOf(_literal),

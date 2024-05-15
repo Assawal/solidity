@@ -34,6 +34,7 @@ u256 valueOfNumberLiteral(std::string_view _value);
 u256 valueOfStringLiteral(std::string_view _value);
 u256 valueOfBoolLiteral(std::string_view _value);
 u256 valueOfLiteral(std::string_view _value, LiteralKind _kind);
+std::string literalToString(Literal const& _literal);
 
 /**
  * Linear order on Yul AST nodes.

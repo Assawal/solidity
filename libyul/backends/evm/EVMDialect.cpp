@@ -219,7 +219,7 @@ std::map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _
 		) {
 			yulAssert(_call.arguments.size() == 1, "");
 			Expression const& arg = _call.arguments.front();
-			_assembly.appendLinkerSymbol(std::get<Literal>(arg).value.str());
+			_assembly.appendLinkerSymbol(literalToString(std::get<Literal>(arg)));
 		}));
 
 		builtins.emplace(createFunction(
@@ -249,7 +249,7 @@ std::map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _
 			yulAssert(_call.arguments.size() == 1, "");
 			Expression const& arg = _call.arguments.front();
 			auto const& lit = std::get<Literal>(arg);
-			auto const dataName = lit.formattingHint ? lit.formattingHint.value() : YulString(lit.value.str());
+			auto const dataName = YulString(literalToString(lit));
 			if (_context.currentObject->name == dataName)
 				_assembly.appendAssemblySize();
 			else
@@ -270,8 +270,7 @@ std::map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _
 			yulAssert(_context.currentObject, "No object available.");
 			yulAssert(_call.arguments.size() == 1, "");
 			Expression const& arg = _call.arguments.front();
-			auto const& lit = std::get<Literal>(arg);
-			auto const dataName = lit.formattingHint ? lit.formattingHint.value() : YulString(lit.value.str());
+			auto const dataName = YulString(literalToString(std::get<Literal>(arg)));
 			if (_context.currentObject->name == dataName)
 				_assembly.appendConstant(0);
 			else
@@ -330,8 +329,8 @@ std::map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _
 				BuiltinContext&
 			) {
 				yulAssert(_call.arguments.size() == 3, "");
-				auto const identifier = std::get<Literal>(_call.arguments[1]).value;
-				_assembly.appendImmutableAssignment(identifier.str());
+				auto const identifier = literalToString(std::get<Literal>(_call.arguments[1]));
+				_assembly.appendImmutableAssignment(identifier);
 			}
 		));
 		builtins.emplace(createFunction(
@@ -346,7 +345,7 @@ std::map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _
 				BuiltinContext&
 			) {
 				yulAssert(_call.arguments.size() == 1, "");
-				_assembly.appendImmutable(std::get<Literal>(_call.arguments.front()).value.str());
+				_assembly.appendImmutable(literalToString(std::get<Literal>(_call.arguments.front())));
 			}
 		));
 	}
@@ -450,9 +449,9 @@ BuiltinFunctionForEVM const* EVMDialect::verbatimFunction(size_t _arguments, siz
 			) {
 				yulAssert(_call.arguments.size() == (1 + _arguments), "");
 				Expression const& bytecode = _call.arguments.front();
-
+				auto const& lit = std::get<Literal>(bytecode);
 				_assembly.appendVerbatim(
-					asBytes(std::get<Literal>(bytecode).value.str()),
+					asBytes(literalToString(lit)),
 					_arguments,
 					_returnVariables
 				);

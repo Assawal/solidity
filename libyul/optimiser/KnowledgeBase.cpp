@@ -68,12 +68,12 @@ bool KnowledgeBase::knownToBeZero(YulString _a)
 	return valueIfKnownConstant(_a) == 0;
 }
 
-std::optional<u256> KnowledgeBase::valueIfKnownConstant(YulString _a)
+std::optional<LiteralValue> KnowledgeBase::valueIfKnownConstant(YulString _a)
 {
 	return explore(_a).absoluteValue();
 }
 
-std::optional<u256> KnowledgeBase::valueIfKnownConstant(Expression const& _expression)
+std::optional<LiteralValue> KnowledgeBase::valueIfKnownConstant(Expression const& _expression)
 {
 	if (Identifier const* ident = std::get_if<Identifier>(&_expression))
 		return valueIfKnownConstant(ident->name);

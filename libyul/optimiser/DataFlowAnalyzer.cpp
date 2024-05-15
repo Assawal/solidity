@@ -410,7 +410,7 @@ bool DataFlowAnalyzer::inScope(YulString _variableName) const
 	return false;
 }
 
-std::optional<u256> DataFlowAnalyzer::valueOfIdentifier(YulString const& _name) const
+std::optional<LiteralValue> DataFlowAnalyzer::valueOfIdentifier(YulString const& _name) const
 {
 	if (AssignedValue const* value = variableValue(_name))
 		if (Literal const* literal = std::get_if<Literal>(value->value))

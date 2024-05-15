@@ -203,7 +203,7 @@ private:
 			solAssert(false);
 
 		if (isDigit(value.front()))
-			return yul::Literal{_identifier.debugData, yul::LiteralKind::Number, yul::valueOfLiteral(value, yul::LiteralKind::Number), {}};
+			return yul::Literal{_identifier.debugData, yul::LiteralKind::Number, yul::valueOfLiteral(value, yul::LiteralKind::Number), {}, value};
 		else
 			return yul::Identifier{_identifier.debugData, yul::YulString{value}};
 	}

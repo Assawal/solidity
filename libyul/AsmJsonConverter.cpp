@@ -20,11 +20,12 @@
  * Converts inline assembly AST to JSON format
  */
 
-#include <libyul/AsmJsonConverter.h>
-#include <libyul/AST.h>
-#include <libyul/Exceptions.h>
+#include "Utilities.h"
 #include <libsolutil/CommonData.h>
 #include <libsolutil/UTF8.h>
+#include <libyul/AST.h>
+#include <libyul/AsmJsonConverter.h>
+#include <libyul/Exceptions.h>
 
 namespace solidity::yul
 {
@@ -48,11 +49,12 @@ Json AsmJsonConverter::operator()(TypedName const& _node) const
 Json AsmJsonConverter::operator()(Literal const& _node) const
 {
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulLiteral");
+	auto const stringRepresentation = literalToString(_node);
 	switch (_node.kind)
 	{
 	case LiteralKind::Number:
 		yulAssert(
-			util::isValidDecimal(_node.value.str()) || util::isValidHex(_node.value.str()),
+			util::isValidDecimal(_node.value.data.str()) || util::isValidHex(_node.value.data.str()),
 			"Invalid number literal"
 		);
 		ret["kind"] = "number";
@@ -62,12 +64,12 @@ Json AsmJsonConverter::operator()(Literal const& _node) const
 		break;
 	case LiteralKind::String:
 		ret["kind"] = "string";
-		ret["hexValue"] = util::toHex(util::asBytes(_node.value.str()));
+		ret["hexValue"] = util::toHex(util::asBytes(stringRepresentation));
 		break;
 	}
 	ret["type"] = _node.type.str();
-	if (util::validateUTF8(_node.value.str()))
-		ret["value"] = _node.value.str();
+	if (util::validateUTF8(stringRepresentation))
+		ret["value"] = stringRepresentation;
 	return ret;
 }
 

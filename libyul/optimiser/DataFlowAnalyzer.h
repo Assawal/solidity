@@ -136,7 +136,7 @@ protected:
 	bool inScope(YulString _variableName) const;
 
 	/// Returns the literal value of the identifier, if it exists.
-	std::optional<u256> valueOfIdentifier(YulString const& _name) const;
+	std::optional<LiteralValue> valueOfIdentifier(YulString const& _name) const;
 
 	enum class StoreLoadLocation {
 		Memory = 0,
@@ -217,7 +217,7 @@ protected:
 	};
 	/// Special expression whose address will be used in m_value.
 	/// YulString does not need to be reset because DataFlowAnalyzer is short-lived.
-	Expression const m_zero{Literal{{}, LiteralKind::Number, u256(0), {}}};
+	Expression const m_zero{Literal{{}, LiteralKind::Number, {0}, {}}};
 	/// List of scopes.
 	std::vector<Scope> m_variableScopes;
 };

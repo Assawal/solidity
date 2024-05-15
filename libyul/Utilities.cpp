@@ -102,7 +102,7 @@ u256 solidity::yul::valueOfNumberLiteral(std::string_view const _value)
 
 u256 solidity::yul::valueOfStringLiteral(std::string_view const _value)
 {
-	yulAssert(_value.size() <= 32, "Literal string too long!");
+	//yulAssert(_value.size() <= 32, "Literal string too long!");
 	return u256(h256::from_string_view(_value, h256::FromBinary, h256::AlignLeft));
 }
 
@@ -116,7 +116,7 @@ u256 yul::valueOfBoolLiteral(std::string_view const _value)
 	yulAssert(false, "Unexpected bool literal value!");
 }
 
-u256 solidity::yul::valueOfLiteral(std::string_view const _value, LiteralKind const _kind)
+u256 yul::valueOfLiteral(std::string_view const _value, LiteralKind const _kind)
 {
 	switch (_kind)
 	{
@@ -128,6 +128,24 @@ u256 solidity::yul::valueOfLiteral(std::string_view const _value, LiteralKind co
 			return valueOfStringLiteral(_value);
 		default:
 			yulAssert(false, "Unexpected literal kind!");
+	}
+}
+
+std::string yul::literalToString(Literal const& _literal)
+{
+	if(_literal.value.representationHint && _literal.value == valueOfLiteral(_literal.value.representationHint.value(), _literal.kind))
+		return _literal.value.representationHint.value();
+
+	switch(_literal.kind)
+	{
+	case LiteralKind::Number:
+		return formatNumber(_literal.value.data);
+	case LiteralKind::Boolean:
+		return _literal.value == 0 ? "false" : "true";
+	case LiteralKind::String:
+		return util::asString(_literal.value.data.str());
+	default:
+		yulAssert(false, "Unexpected literal kind!");
 	}
 }
 

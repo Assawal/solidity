@@ -202,12 +202,12 @@ Literal AsmJsonImporter::createLiteral(Json const& _node)
 			value.size() <= 32,
 			"String literal too long (" + std::to_string(lit.value.str().size()) + " > 32)"
 		);
-		lit.formattingHint = YulString(value);
 	}
 	else
 		yulAssert(false, "unknown type of literal");
 
 	lit.value = valueOfLiteral(value, lit.kind);
+	lit.stringRepresentation = value;
 
 	return lit;
 }

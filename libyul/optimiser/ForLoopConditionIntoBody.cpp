@@ -58,7 +58,7 @@ void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 			Literal {
 				debugData,
 				LiteralKind::Boolean,
-				1,
+				{1},
 				m_dialect.boolType
 			}
 		);

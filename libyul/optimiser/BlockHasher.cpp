@@ -52,7 +52,7 @@ std::map<Block const*, uint64_t> BlockHasher::run(Block const& _block)
 void BlockHasher::operator()(Literal const& _literal)
 {
 	hash64(compileTimeLiteralHash("Literal"));
-	hash64(std::hash<u256>{}(_literal.value));
+	hash64(std::hash<u256>{}(_literal.value.data));
 	hash64(_literal.type.hash());
 	hash8(static_cast<uint8_t>(_literal.kind));
 }
@@ -201,7 +201,7 @@ uint64_t ExpressionHasher::run(Expression const& _e)
 void ExpressionHasher::operator()(Literal const& _literal)
 {
 	hash64(compileTimeLiteralHash("Literal"));
-	hash64(std::hash<u256>{}(_literal.value));
+	hash64(std::hash<u256>{}(_literal.value.data));
 	hash64(_literal.type.hash());
 	hash8(static_cast<uint8_t>(_literal.kind));
 }

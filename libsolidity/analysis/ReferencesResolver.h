@@ -53,8 +53,10 @@ public:
 		langutil::ErrorReporter& _errorReporter,
 		NameAndTypeResolver& _resolver,
 		langutil::EVMVersion _evmVersion,
+		yul::YulNameRepository const& _yulNameRepository,
 		bool _resolveInsideCode = false
 	):
+ 		m_yulNameRepository(_yulNameRepository),
 		m_errorReporter(_errorReporter),
 		m_resolver(_resolver),
 		m_evmVersion(_evmVersion),
@@ -94,8 +96,9 @@ private:
 	void resolveInheritDoc(StructuredDocumentation const& _documentation, StructurallyDocumentedAnnotation& _annotation);
 
 	/// Checks if the name contains a '.'.
-	void validateYulIdentifierName(yul::YulString _name, langutil::SourceLocation const& _location);
+	void validateYulIdentifierName(std::string_view _name, langutil::SourceLocation const& _location);
 
+	yul::YulNameRepository const& m_yulNameRepository;
 	langutil::ErrorReporter& m_errorReporter;
 	NameAndTypeResolver& m_resolver;
 	langutil::EVMVersion m_evmVersion;

@@ -51,6 +51,7 @@ public:
 		AbstractAssembly& _assembly,
 		AsmAnalysisInfo& _analysisInfo,
 		Block const& _block,
+		YulNameRepository& _yulNameRepository,
 		EVMDialect const& _dialect,
 		BuiltinContext& _builtinContext,
 		UseNamedLabels _useNamedLabelsForFunctions
@@ -68,7 +69,8 @@ private:
 		BuiltinContext& _builtinContext,
 		UseNamedLabels _useNamedLabelsForFunctions,
 		CFG const& _dfg,
-		StackLayout const& _stackLayout
+		StackLayout const& _stackLayout,
+		YulNameRepository const& _yulNameRepository
 	);
 
 	/// Assert that it is valid to transition from @a _currentStack to @a _desiredStack.
@@ -110,6 +112,7 @@ private:
 	std::set<CFG::BasicBlock const*> m_generated;
 	CFG::FunctionInfo const* m_currentFunctionInfo = nullptr;
 	std::vector<StackTooDeepError> m_stackErrors;
+	YulNameRepository const& m_yulNameRepository;
 };
 
 }

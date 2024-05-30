@@ -25,6 +25,7 @@
 
 #include <libyul/ASTForward.h>
 #include <libyul/YulString.h>
+#include <libyul/YulName.h>
 
 #include <libsolutil/CommonData.h>
 
@@ -33,6 +34,7 @@
 #include <liblangutil/DebugData.h>
 
 #include <map>
+#include <utility>
 
 namespace solidity::yul
 {
@@ -47,12 +49,12 @@ class AsmPrinter
 {
 public:
 	explicit AsmPrinter(
-		Dialect const* _dialect = nullptr,
+		YulNameRepository const* _nameRepository = nullptr,
 		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {},
 		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
 	):
-		m_dialect(_dialect),
+		m_nameRepository(_nameRepository),
 		m_debugInfoSelection(_debugInfoSelection),
 		m_soliditySourceProvider(_soliditySourceProvider)
 	{
@@ -62,11 +64,11 @@ public:
 	}
 
 	explicit AsmPrinter(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {},
 		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
-	): AsmPrinter(&_dialect, _sourceIndexToName, _debugInfoSelection, _soliditySourceProvider) {}
+	): AsmPrinter(&_nameRepository, std::move(_sourceIndexToName), _debugInfoSelection, _soliditySourceProvider) {}
 
 	std::string operator()(Literal const& _literal);
 	std::string operator()(Identifier const& _identifier);
@@ -91,8 +93,8 @@ public:
 	);
 
 private:
-	std::string formatTypedName(TypedName _variable);
-	std::string appendTypeName(YulString _type, bool _isBoolLiteral = false) const;
+	std::string formatTypedName(TypedName const& _variable);
+	std::string appendTypeName(Type _type, bool _isBoolLiteral = false) const;
 	std::string formatDebugData(langutil::DebugData::ConstPtr const& _debugData, bool _statement);
 	template <class T>
 	std::string formatDebugData(T const& _node)
@@ -101,7 +103,7 @@ private:
 		return formatDebugData(_node.debugData, !isExpression);
 	}
 
-	Dialect const* const m_dialect = nullptr;
+	YulNameRepository const* const m_nameRepository = nullptr;
 	std::map<std::string, unsigned> m_nameToSourceIndex;
 	langutil::SourceLocation m_lastLocation = {};
 	langutil::DebugInfoSelection m_debugInfoSelection = {};

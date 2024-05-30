@@ -56,10 +56,12 @@ public:
 	explicit Parser(
 		langutil::ErrorReporter& _errorReporter,
 		Dialect const& _dialect,
+		YulNameRepository &_yulNameRepository,
 		std::optional<langutil::SourceLocation> _locationOverride = {}
 	):
 		ParserBase(_errorReporter),
 		m_dialect(_dialect),
+		m_yulNameRepository(_yulNameRepository),
 		m_locationOverride{_locationOverride ? *_locationOverride : langutil::SourceLocation{}},
 		m_useSourceLocationFrom{
 			_locationOverride ?
@@ -73,10 +75,12 @@ public:
 	explicit Parser(
 		langutil::ErrorReporter& _errorReporter,
 		Dialect const& _dialect,
+		YulNameRepository& _yulNameRepository,
 		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceNames
 	):
 		ParserBase(_errorReporter),
 		m_dialect(_dialect),
+		m_yulNameRepository(_yulNameRepository),
 		m_sourceNames{std::move(_sourceNames)},
 		m_useSourceLocationFrom{
 			m_sourceNames.has_value() ?
@@ -146,7 +150,7 @@ protected:
 	FunctionDefinition parseFunctionDefinition();
 	FunctionCall parseCall(std::variant<Literal, Identifier>&& _initialOp);
 	TypedName parseTypedName();
-	YulString expectAsmIdentifier();
+	Type expectAsmIdentifier();
 
 	/// Reports an error if we are currently not inside the body part of a for loop.
 	void checkBreakContinuePosition(std::string const& _which);
@@ -155,6 +159,7 @@ protected:
 
 private:
 	Dialect const& m_dialect;
+	YulNameRepository& m_yulNameRepository;
 
 	std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> m_sourceNames;
 	langutil::SourceLocation m_locationOverride;

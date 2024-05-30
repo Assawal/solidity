@@ -387,6 +387,8 @@ void CompilerContext::appendInlineAssembly(
 )
 {
 	unsigned startStackHeight = stackHeight();
+	yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
+	yul::YulNameRepository nameRepository (dialect);
 
 	std::set<yul::YulString> externallyUsedIdentifiers;
 	for (auto const& fun: _externallyUsedFunctions)
@@ -403,7 +405,7 @@ void CompilerContext::appendInlineAssembly(
 	{
 		if (_insideFunction)
 			return false;
-		return util::contains(_localVariables, _identifier.name.str());
+		return util::contains(_localVariables, nameRepository.labelOf(_identifier.name));
 	};
 	identifierAccess.generateCode = [&](
 		yul::Identifier const& _identifier,
@@ -412,7 +414,7 @@ void CompilerContext::appendInlineAssembly(
 	)
 	{
 		solAssert(_context == yul::IdentifierContext::RValue || _context == yul::IdentifierContext::LValue, "");
-		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name.str());
+		auto it = std::find(_localVariables.begin(), _localVariables.end(), nameRepository.labelOf(_identifier.name));
 		solAssert(it != _localVariables.end(), "");
 		auto stackDepth = static_cast<size_t>(distance(it, _localVariables.end()));
 		size_t stackDiff = static_cast<size_t>(_assembly.stackHeight()) - startStackHeight + stackDepth;
@@ -436,12 +438,11 @@ void CompilerContext::appendInlineAssembly(
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	langutil::CharStream charStream(_assembly, _sourceName);
-	yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
 	std::optional<langutil::SourceLocation> locationOverride;
 	if (!_system)
 		locationOverride = m_asm->currentSourceLocation();
 	std::shared_ptr<yul::Block> parserResult =
-		yul::Parser(errorReporter, dialect, std::move(locationOverride))
+		yul::Parser(errorReporter, dialect, nameRepository, std::move(locationOverride))
 		.parse(charStream);
 #ifdef SOL_OUTPUT_ASM
 	cout << yul::AsmPrinter(&dialect)(*parserResult) << endl;
@@ -470,7 +471,7 @@ void CompilerContext::appendInlineAssembly(
 		analyzerResult = yul::AsmAnalyzer(
 			analysisInfo,
 			errorReporter,
-			dialect,
+		    nameRepository,
 			identifierAccess.resolve
 		).analyze(*parserResult);
 	if (!parserResult || !errorReporter.errors().empty() || !analyzerResult)
@@ -491,11 +492,11 @@ void CompilerContext::appendInlineAssembly(
 		{
 			// Store as generated sources, but first re-parse to update the source references.
 			solAssert(m_generatedYulUtilityCode.empty(), "");
-			m_generatedYulUtilityCode = yul::AsmPrinter(dialect)(*obj.code);
-			std::string code = yul::AsmPrinter{dialect}(*obj.code);
+			m_generatedYulUtilityCode = yul::AsmPrinter(nameRepository)(*obj.code);
+			std::string code = yul::AsmPrinter(nameRepository)(*obj.code);
 			langutil::CharStream charStream(m_generatedYulUtilityCode, _sourceName);
-			obj.code = yul::Parser(errorReporter, dialect).parse(charStream);
-			*obj.analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(dialect, obj);
+			obj.code = yul::Parser(errorReporter, dialect, nameRepository).parse(charStream);
+			*obj.analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(nameRepository, obj);
 		}
 
 		analysisInfo = std::move(*obj.analysisInfo);
@@ -522,6 +523,7 @@ void CompilerContext::appendInlineAssembly(
 		analysisInfo,
 		*m_asm,
 		m_evmVersion,
+		nameRepository,
 		identifierAccess.generateCode,
 		_system,
 		_optimiserSettings.optimizeStackAllocation

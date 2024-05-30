@@ -134,6 +134,7 @@ void outputPerformanceMetrics(map<string, int64_t> const& _metrics)
 
 
 void OptimiserSuite::run(
+	YulNameRepository& _yulNameRepository,
 	Dialect const& _dialect,
 	GasMeter const* _meter,
 	Object& _object,
@@ -141,7 +142,7 @@ void OptimiserSuite::run(
 	std::string_view _optimisationSequence,
 	std::string_view _optimisationCleanupSequence,
 	std::optional<size_t> _expectedExecutionsPerDeployment,
-	std::set<YulString> const& _externallyUsedIdentifiers
+	std::set<YulName> const& _externallyUsedIdentifiers
 )
 {
 	EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect);
@@ -150,18 +151,18 @@ void OptimiserSuite::run(
 		evmDialect &&
 		evmDialect->evmVersion().canOverchargeGasForCall() &&
 		evmDialect->providesObjectAccess();
-	std::set<YulString> reservedIdentifiers = _externallyUsedIdentifiers;
+	std::set<YulName> reservedIdentifiers = _externallyUsedIdentifiers;
 	reservedIdentifiers += _dialect.fixedFunctionNames();
 
 	*_object.code = std::get<Block>(Disambiguator(
+		_yulNameRepository,
 		_dialect,
 		*_object.analysisInfo,
 		reservedIdentifiers
 	)(*_object.code));
 	Block& ast = *_object.code;
 
-	NameDispenser dispenser{_dialect, ast, reservedIdentifiers};
-	OptimiserStepContext context{_dialect, dispenser, reservedIdentifiers, _expectedExecutionsPerDeployment};
+	OptimiserStepContext context{_dialect, _yulNameRepository, reservedIdentifiers, _expectedExecutionsPerDeployment};
 
 	OptimiserSuite suite(context, Debug::None);
 
@@ -169,7 +170,6 @@ void OptimiserSuite::run(
 	// ForLoopInitRewriter. Run them first to be able to run arbitrary sequences safely.
 	suite.runSequence("hgfo", ast);
 
-	NameSimplifier::run(suite.m_context, ast);
 	// Now the user-supplied part
 	suite.runSequence(_optimisationSequence, ast);
 
@@ -181,6 +181,7 @@ void OptimiserSuite::run(
 	// message once we perform code generation.
 	if (!usesOptimizedCodeGenerator)
 		StackCompressor::run(
+			_yulNameRepository,
 			_dialect,
 			_object,
 			_optimizeStackAllocation,
@@ -201,6 +202,7 @@ void OptimiserSuite::run(
 		if (usesOptimizedCodeGenerator)
 		{
 			StackCompressor::run(
+				_yulNameRepository,
 				_dialect,
 				_object,
 				_optimizeStackAllocation,
@@ -212,10 +214,6 @@ void OptimiserSuite::run(
 		else if (evmDialect->providesObjectAccess() && _optimizeStackAllocation)
 			StackLimitEvader::run(suite.m_context, _object);
 	}
-
-	dispenser.reset(ast);
-	NameSimplifier::run(suite.m_context, ast);
-	VarNameCleaner::run(suite.m_context, ast);
 
 #ifdef PROFILE_OPTIMIZER_STEPS
 	outputPerformanceMetrics(suite.m_durationPerStepInMicroseconds);

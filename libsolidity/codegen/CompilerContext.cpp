@@ -534,15 +534,16 @@ void CompilerContext::appendInlineAssembly(
 }
 
 
-void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _dialect, OptimiserSettings const& _optimiserSettings, std::set<yul::YulString> const& _externalIdentifiers)
+void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _dialect, yul::YulNameRepository& _yulNameRepository, OptimiserSettings const& _optimiserSettings, std::set<yul::YulString> const& _externalIdentifiers)
 {
 #ifdef SOL_OUTPUT_ASM
 	cout << yul::AsmPrinter(*dialect)(*_object.code) << endl;
 #endif
 
 	bool const isCreation = runtimeContext() != nullptr;
-	yul::GasMeter meter(_dialect, isCreation, _optimiserSettings.expectedExecutionsPerDeployment);
+	yul::GasMeter meter(_yulNameRepository, _dialect, isCreation, _optimiserSettings.expectedExecutionsPerDeployment);
 	yul::OptimiserSuite::run(
+		_yulNameRepository,
 		_dialect,
 		&meter,
 		_object,

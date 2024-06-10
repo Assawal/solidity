@@ -96,8 +96,6 @@ struct Dialect
 
 	virtual Literal zeroLiteralForType(YulName _type, YulNameRepository const& _nameRepository) const;
 
-	virtual std::set<std::string_view> fixedFunctionNames() const { return {}; }
-
 	Dialect() = default;
 	virtual ~Dialect() = default;
 

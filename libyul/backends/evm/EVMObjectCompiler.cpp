@@ -86,7 +86,6 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 			*_object.analysisInfo,
 			*_object.code,
 			m_yulNameRepository,
-			m_dialect,
 			context,
 			OptimizedEVMCodeTransform::UseNamedLabels::ForFirstFunctionOfEachName
 		);

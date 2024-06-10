@@ -100,7 +100,7 @@ private:
 	/// Visits the expression, expects that it evaluates to exactly one value and
 	/// returns the type. Reports errors on errors and returns the default type.
 	Type expectExpression(Expression const& _expr);
-	Type expectStringLiteral(Literal const& _literal, bool _expectUnlimitedLiteralArgument);
+	Type expectUnlimitedStringLiteral(Literal const& _literal) const;
 	/// Visits the expression and expects it to return a single boolean value.
 	/// Reports an error otherwise.
 	void expectBoolExpression(Expression const& _expr);

@@ -354,8 +354,7 @@ bool SyntaxChecker::visit(InlineAssembly const& _inlineAssembly)
 	if (!m_useYulOptimizer)
 		return false;
 
-	yul::YulNameRepository nameRepository (_inlineAssembly.dialect());
-	if (yul::MSizeFinder::containsMSize(nameRepository, _inlineAssembly.operations()))
+	if (yul::MSizeFinder::containsMSize(_inlineAssembly.nameRepository(), _inlineAssembly.operations()))
 		m_errorReporter.syntaxError(
 			6553_error,
 			_inlineAssembly.location(),

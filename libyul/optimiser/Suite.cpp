@@ -152,7 +152,6 @@ void OptimiserSuite::run(
 		evmDialect->evmVersion().canOverchargeGasForCall() &&
 		evmDialect->providesObjectAccess();
 	std::set<YulName> reservedIdentifiers = _externallyUsedIdentifiers;
-	reservedIdentifiers += _dialect.fixedFunctionNames();
 
 	*_object.code = std::get<Block>(Disambiguator(
 		_yulNameRepository,
@@ -182,7 +181,6 @@ void OptimiserSuite::run(
 	if (!usesOptimizedCodeGenerator)
 		StackCompressor::run(
 			_yulNameRepository,
-			_dialect,
 			_object,
 			_optimizeStackAllocation,
 			stackCompressorMaxIterations
@@ -198,12 +196,11 @@ void OptimiserSuite::run(
 	if (evmDialect)
 	{
 		yulAssert(_meter, "");
-		ConstantOptimiser{*evmDialect, *_meter}(ast);
+		ConstantOptimiser{_yulNameRepository, *evmDialect, *_meter}(ast);
 		if (usesOptimizedCodeGenerator)
 		{
 			StackCompressor::run(
 				_yulNameRepository,
-				_dialect,
 				_object,
 				_optimizeStackAllocation,
 				stackCompressorMaxIterations
@@ -219,7 +216,7 @@ void OptimiserSuite::run(
 	outputPerformanceMetrics(suite.m_durationPerStepInMicroseconds);
 #endif
 
-	*_object.analysisInfo = AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object);
+	*_object.analysisInfo = AsmAnalyzer::analyzeStrictAssertCorrect(_yulNameRepository, _object);
 }
 
 namespace

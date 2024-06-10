@@ -236,7 +236,9 @@ bool ReferencesResolver::visit(UsingForDirective const& _usingFor)
 bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 {
 	m_yulAnnotation = &_inlineAssembly.annotation();
+	m_yulNameRepository = &_inlineAssembly.nameRepository();
 	(*this)(_inlineAssembly.operations());
+	m_yulNameRepository = nullptr;
 	m_yulAnnotation = nullptr;
 
 	return false;
@@ -270,12 +272,13 @@ bool ReferencesResolver::visit(BinaryOperation const& _binaryOperation)
 
 void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
 {
+	solAssert(m_yulNameRepository != nullptr);
 	solAssert(nativeLocationOf(_function) == originLocationOf(_function), "");
-	validateYulIdentifierName(m_yulNameRepository.labelOf(_function.name), nativeLocationOf(_function));
+	validateYulIdentifierName(m_yulNameRepository->labelOf(_function.name), nativeLocationOf(_function));
 	for (yul::TypedName const& varName: _function.parameters + _function.returnVariables)
 	{
 		solAssert(nativeLocationOf(varName) == originLocationOf(varName), "");
-		validateYulIdentifierName(m_yulNameRepository.labelOf(varName.name), nativeLocationOf(varName));
+		validateYulIdentifierName(m_yulNameRepository->labelOf(varName.name), nativeLocationOf(varName));
 	}
 
 	bool wasInsideFunction = m_yulInsideFunction;
@@ -286,8 +289,9 @@ void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
 
 void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 {
+	solAssert(m_yulNameRepository != nullptr);
 	solAssert(nativeLocationOf(_identifier) == originLocationOf(_identifier), "");
-	auto const identifierLabel = m_yulNameRepository.labelOf(_identifier.name);
+	auto const identifierLabel = m_yulNameRepository->labelOf(_identifier.name);
 	if (m_resolver.experimentalSolidity())
 	{
 		std::vector<std::string> splitName;
@@ -391,13 +395,14 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 
 void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 {
+	solAssert(m_yulNameRepository != nullptr);
 	for (auto const& identifier: _varDecl.variables)
 	{
 		solAssert(nativeLocationOf(identifier) == originLocationOf(identifier), "");
-		validateYulIdentifierName(m_yulNameRepository.labelOf(identifier.name), nativeLocationOf(identifier));
+		validateYulIdentifierName(m_yulNameRepository->labelOf(identifier.name), nativeLocationOf(identifier));
 
 		if (
-			auto declarations = m_resolver.nameFromCurrentScope(std::string(m_yulNameRepository.labelOf(identifier.name)));
+			auto declarations = m_resolver.nameFromCurrentScope(std::string(m_yulNameRepository->labelOf(identifier.name)));
 			!declarations.empty()
 		)
 		{

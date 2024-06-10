@@ -130,9 +130,8 @@ std::vector<Type> AsmAnalyzer::operator()(Literal const& _literal)
 			fmt::format(
 				R"(Invalid type "{}" for literal "{}".)",
 				m_yulNameRepository.labelOf(_literal.type),
-				formatLiteral(_literal, false)
-			)
-		);
+				formatLiteral(_literal, false)));
+	}
 
 	yulAssert(erroneousLiteral || validLiteral(_literal), "Invalid literal after validating it through AsmAnalyzer.");
 	return {_literal.type};
@@ -582,10 +581,10 @@ Type AsmAnalyzer::expectExpression(Expression const& _expr)
 	return types.empty() ? m_yulNameRepository.predefined().defaultType : types.front();
 }
 
-YulString AsmAnalyzer::expectUnlimitedStringLiteral(Literal const& _literal)
+Type AsmAnalyzer::expectUnlimitedStringLiteral(Literal const& _literal) const
 {
 	yulAssert(_literal.kind == LiteralKind::String);
-	yulAssert(m_dialect.validTypeForLiteral(LiteralKind::String, _literal.value, _literal.type, m_yulNameRepository));
+	yulAssert(m_yulNameRepository.dialect().validTypeForLiteral(LiteralKind::String, _literal.value, _literal.type, m_yulNameRepository));
 	yulAssert(_literal.value.unlimited());
 
 	return _literal.type;

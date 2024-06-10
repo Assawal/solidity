@@ -52,7 +52,6 @@ public:
 		AsmAnalysisInfo& _analysisInfo,
 		Block const& _block,
 		YulNameRepository& _yulNameRepository,
-		EVMDialect const& _dialect,
 		BuiltinContext& _builtinContext,
 		UseNamedLabels _useNamedLabelsForFunctions
 	);

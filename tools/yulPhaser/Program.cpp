@@ -121,7 +121,7 @@ std::variant<std::unique_ptr<Block>, ErrorList> Program::parseObject(yul::YulNam
 	ErrorReporter errorReporter(errors);
 	auto scanner = std::make_shared<Scanner>(_source);
 
-	ObjectParser parser(errorReporter, _yulNameRepository.dialect(), _yulNameRepository);
+	ObjectParser parser(errorReporter, _yulNameRepository);
 	std::shared_ptr<Object> object = parser.parse(scanner, false);
 	if (object == nullptr || !errorReporter.errors().empty())
 		// NOTE: It's possible to get errors even if the returned object is non-null.
@@ -177,7 +177,7 @@ std::unique_ptr<Block> Program::disambiguateAST(
 )
 {
 	std::set<YulName> const externallyUsedIdentifiers = {};
-	Disambiguator disambiguator(_yulNameRepository, _yulNameRepository.dialect(), _analysisInfo, externallyUsedIdentifiers);
+	Disambiguator disambiguator(_yulNameRepository, _analysisInfo, externallyUsedIdentifiers);
 
 	return std::make_unique<Block>(std::get<Block>(disambiguator(_ast)));
 }

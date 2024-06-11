@@ -38,6 +38,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 
 using namespace solidity;
 using namespace solidity::util;
@@ -52,7 +53,7 @@ namespace solidity::yul::test
 namespace
 {
 
-std::shared_ptr<Block> parse(std::string const& _source, Dialect const& _dialect, ErrorReporter& errorReporter)
+std::shared_ptr<Block> parse(std::string const& _source, YulNameRepository& _yulNameRepository, ErrorReporter& errorReporter)
 {
 	try
 	{
@@ -63,7 +64,7 @@ std::shared_ptr<Block> parse(std::string const& _source, Dialect const& _dialect
 
 		auto parserResult = yul::Parser(
 			errorReporter,
-			_dialect,
+			_yulNameRepository,
 			std::move(indicesToSourceNames)
 		).parse(stream);
 		if (parserResult)
@@ -72,7 +73,7 @@ std::shared_ptr<Block> parse(std::string const& _source, Dialect const& _dialect
 			if (yul::AsmAnalyzer(
 				analysisInfo,
 				errorReporter,
-				_dialect
+				_yulNameRepository
 			).analyze(*parserResult))
 				return parserResult;
 		}
@@ -84,11 +85,11 @@ std::shared_ptr<Block> parse(std::string const& _source, Dialect const& _dialect
 	return {};
 }
 
-std::optional<Error> parseAndReturnFirstError(std::string const& _source, Dialect const& _dialect, bool _allowWarningsAndInfos = true)
+std::optional<Error> parseAndReturnFirstError(std::string const& _source, YulNameRepository& _yulNameRepository, bool _allowWarningsAndInfos = true)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	if (!parse(_source, _dialect, errorReporter))
+	if (!parse(_source, _yulNameRepository, errorReporter))
 	{
 		BOOST_REQUIRE(!errors.empty());
 		BOOST_CHECK_EQUAL(errors.size(), 1);
@@ -111,13 +112,14 @@ std::optional<Error> parseAndReturnFirstError(std::string const& _source, Dialec
 
 bool successParse(std::string const& _source, Dialect const& _dialect = Dialect::yulDeprecated(), bool _allowWarningsAndInfos = true)
 {
-	return !parseAndReturnFirstError(_source, _dialect, _allowWarningsAndInfos);
+	YulNameRepository repository (_dialect);
+	return !parseAndReturnFirstError(_source, repository, _allowWarningsAndInfos);
 }
 
 Error expectError(std::string const& _source, Dialect const& _dialect = Dialect::yulDeprecated(), bool _allowWarningsAndInfos = false)
 {
-
-	auto error = parseAndReturnFirstError(_source, _dialect, _allowWarningsAndInfos);
+	YulNameRepository repository (_dialect);
+	auto error = parseAndReturnFirstError(_source, repository, _allowWarningsAndInfos);
 	BOOST_REQUIRE(error);
 	return *error;
 }
@@ -140,11 +142,11 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 {
 	struct SimpleDialect: public Dialect
 	{
-		BuiltinFunction const* builtin(YulString _name) const override
+		BuiltinFunction const* builtin(std::string_view _name) const override
 		{
-			return _name == "builtin"_yulstring ? &f : nullptr;
+			return _name == "builtin" ? &f : nullptr;
 		}
-		BuiltinFunction f{"builtin"_yulstring, std::vector<Type>(2), std::vector<Type>(3), {}, {}, false, {}};
+		BuiltinFunction f{"builtin", std::vector<Type>(2), std::vector<Type>(3), {}, {}, false, {}};
 	};
 
 	SimpleDialect dialect;
@@ -155,6 +157,7 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 
 BOOST_AUTO_TEST_CASE(default_types_set)
 {
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
 	ErrorList errorList;
 	ErrorReporter reporter(errorList);
 	std::shared_ptr<Block> result = parse(
@@ -164,7 +167,7 @@ BOOST_AUTO_TEST_CASE(default_types_set)
 			"let y := add(1, 2) "
 			"switch y case 0 {} default {} "
 		"}",
-		EVMDialectTyped::instance(EVMVersion{}),
+		repository,
 		reporter
 	);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
@@ -184,7 +187,7 @@ BOOST_AUTO_TEST_CASE(default_types_set)
 
 	// Now test again with type dialect. Now the default types
 	// should be omitted.
-	BOOST_CHECK_EQUAL(AsmPrinter{EVMDialectTyped::instance(EVMVersion{})}(*result),
+	BOOST_CHECK_EQUAL(AsmPrinter{repository}(*result),
 		"{\n"
 		"    let x:bool := true\n"
 		"    let z:bool := true\n"
@@ -210,8 +213,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_empty_block)
 	auto const sourceText =
 		"/// @src 0:234:543\n"
 		"{}\n";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository (EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	CHECK_LOCATION(result->debugData->originLocation, "source0", 234, 543);
 }

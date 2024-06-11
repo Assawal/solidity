@@ -92,7 +92,7 @@ std::tuple<Block, std::unique_ptr<YulNameRepository>> yul::test::disambiguate(st
 {
 	auto repository = std::make_unique<YulNameRepository>(defaultDialect(_yul));
 	auto result = parse(_source, _yul);
-	auto block = std::get<Block>(Disambiguator(*repository, repository->dialect(), *result.second, {})(*result.first));
+	auto block = std::get<Block>(Disambiguator(*repository, *result.second, {})(*result.first));
 	return std::make_tuple(block, std::move(repository));
 }
 

@@ -61,14 +61,15 @@ TestCase::TestResult ControlFlowSideEffectsTest::run(std::ostream& _stream, std:
 	if (!obj.code)
 		BOOST_THROW_EXCEPTION(std::runtime_error("Parsing input failed."));
 
+	YulNameRepository repository (EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()));
 	ControlFlowSideEffectsCollector sideEffects(
-		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
+		repository,
 		*obj.code
 	);
 	m_obtainedResult.clear();
 	forEach<FunctionDefinition const>(*obj.code, [&](FunctionDefinition const& _fun) {
 		std::string effectStr = toString(sideEffects.functionSideEffects().at(&_fun));
-		m_obtainedResult += _fun.name.str() + (effectStr.empty() ? ":" : ": " + effectStr) + "\n";
+		m_obtainedResult += std::string(repository.labelOf(_fun.name)) + (effectStr.empty() ? ":" : ": " + effectStr) + "\n";
 	});
 
 	return checkResult(_stream, _linePrefix, _formatted);

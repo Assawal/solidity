@@ -1461,7 +1461,7 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 	}
 
 	auto nameRepository = std::make_unique<yul::YulNameRepository>(dialect);
-	yul::Parser asmParser(m_errorReporter, dialect, *nameRepository);
+	yul::Parser asmParser(m_errorReporter, *nameRepository);
 	std::shared_ptr<yul::Block> block = asmParser.parseInline(m_scanner);
 	if (block == nullptr)
 		BOOST_THROW_EXCEPTION(FatalError());

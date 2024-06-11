@@ -122,6 +122,7 @@ public:
 	BuiltinFunction const* storageLoadFunction(YulName _type) const;
 	YulName hashFunction(YulName _type) const;
 
+	YulName nameOfLabel(std::string_view label) const;
 	YulName nameOfBuiltin(std::string_view builtin) const;
 	YulName nameOfType(std::string_view type) const;
 	bool isType(YulName _name) const;

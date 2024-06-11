@@ -244,6 +244,19 @@ YulNameRepository::BuiltinFunction YulNameRepository::convertBuiltinFunction(yul
 	return result;
 }
 
+YulName YulNameRepository::nameOfLabel(std::string_view const label) const
+{
+	auto const it = std::find(m_definedLabels.begin(), m_definedLabels.end(), label);
+	if (it != m_definedLabels.end())
+	{
+		auto const labelIndex = static_cast<size_t>(std::distance(m_definedLabels.begin(), it));
+		auto itName = std::find(m_names.begin(), m_names.end(), std::make_tuple(labelIndex, true));
+		if (itName != m_names.end())
+			return YulName{static_cast<size_t>(std::distance(m_names.begin(), itName))};
+	}
+	return emptyName();
+}
+
 YulName YulNameRepository::nameOfBuiltin(std::string_view const builtin) const
 {
 	for (size_t i = 0; i < 1 + m_nBuiltin; ++i)

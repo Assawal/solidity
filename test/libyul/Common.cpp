@@ -68,30 +68,32 @@ std::pair<std::shared_ptr<Block>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::te
 
 std::pair<std::shared_ptr<Object>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(
 	std::string const& _source,
-	Dialect const& _dialect,
+	YulNameRepository& _yulNameRepository,
 	ErrorList& _errors
 )
 {
 	ErrorReporter errorReporter(_errors);
 	CharStream stream(_source, "");
 	std::shared_ptr<Scanner> scanner = std::make_shared<Scanner>(stream);
-	std::shared_ptr<Object> parserResult = yul::ObjectParser(errorReporter, _dialect).parse(scanner, false);
+	std::shared_ptr<Object> parserResult = yul::ObjectParser(errorReporter, _yulNameRepository).parse(scanner, false);
 	if (!parserResult)
 		return {};
 	if (!parserResult->code || errorReporter.hasErrors())
 		return {};
 	std::shared_ptr<AsmAnalysisInfo> analysisInfo = std::make_shared<AsmAnalysisInfo>();
-	AsmAnalyzer analyzer(*analysisInfo, errorReporter, _dialect, {}, parserResult->qualifiedDataNames());
+	AsmAnalyzer analyzer(*analysisInfo, errorReporter, _yulNameRepository, {}, parserResult->qualifiedDataNames());
 	// TODO this should be done recursively.
 	if (!analyzer.analyze(*parserResult->code) || errorReporter.hasErrors())
 		return {};
 	return {std::move(parserResult), std::move(analysisInfo)};
 }
 
-yul::Block yul::test::disambiguate(std::string const& _source, bool _yul)
+std::tuple<Block, std::unique_ptr<YulNameRepository>> yul::test::disambiguate(std::string const& _source, bool _yul)
 {
+	auto repository = std::make_unique<YulNameRepository>(defaultDialect(_yul));
 	auto result = parse(_source, _yul);
-	return std::get<Block>(Disambiguator(defaultDialect(_yul), *result.second, {})(*result.first));
+	auto block = std::get<Block>(Disambiguator(*repository, repository->dialect(), *result.second, {})(*result.first));
+	return std::make_tuple(block, std::move(repository));
 }
 
 std::string yul::test::format(std::string const& _source, bool _yul)

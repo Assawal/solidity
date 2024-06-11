@@ -55,12 +55,10 @@ public:
 
 	explicit Parser(
 		langutil::ErrorReporter& _errorReporter,
-		Dialect const& _dialect,
-		YulNameRepository &_yulNameRepository,
+		YulNameRepository& _yulNameRepository,
 		std::optional<langutil::SourceLocation> _locationOverride = {}
 	):
 		ParserBase(_errorReporter),
-		m_dialect(_dialect),
 		m_yulNameRepository(_yulNameRepository),
 		m_locationOverride{_locationOverride ? *_locationOverride : langutil::SourceLocation{}},
 		m_useSourceLocationFrom{
@@ -74,12 +72,10 @@ public:
 	/// from the comments (via @src and other tags).
 	explicit Parser(
 		langutil::ErrorReporter& _errorReporter,
-		Dialect const& _dialect,
 		YulNameRepository& _yulNameRepository,
 		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceNames
 	):
 		ParserBase(_errorReporter),
-		m_dialect(_dialect),
 		m_yulNameRepository(_yulNameRepository),
 		m_sourceNames{std::move(_sourceNames)},
 		m_useSourceLocationFrom{
@@ -158,7 +154,6 @@ protected:
 	static bool isValidNumberLiteral(std::string const& _literal);
 
 private:
-	Dialect const& m_dialect;
 	YulNameRepository& m_yulNameRepository;
 
 	std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> m_sourceNames;

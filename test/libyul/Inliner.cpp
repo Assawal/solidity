@@ -42,14 +42,14 @@ namespace
 {
 std::string inlinableFunctions(std::string const& _source)
 {
-	auto ast = disambiguate(_source);
+	auto [ast, repository] = disambiguate(_source);
 
 	InlinableExpressionFunctionFinder funFinder;
 	funFinder(ast);
 
 	std::vector<std::string> functionNames;
 	for (auto const& f: funFinder.inlinableFunctions())
-		functionNames.emplace_back(f.first.str());
+		functionNames.emplace_back(repository->labelOf(f.first));
 	return boost::algorithm::join(functionNames, ",");
 }
 

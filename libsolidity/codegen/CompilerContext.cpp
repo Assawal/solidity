@@ -442,7 +442,7 @@ void CompilerContext::appendInlineAssembly(
 	if (!_system)
 		locationOverride = m_asm->currentSourceLocation();
 	std::shared_ptr<yul::Block> parserResult =
-		yul::Parser(errorReporter, dialect, nameRepository, std::move(locationOverride))
+		yul::Parser(errorReporter, nameRepository, std::move(locationOverride))
 		.parse(charStream);
 #ifdef SOL_OUTPUT_ASM
 	cout << yul::AsmPrinter(&dialect)(*parserResult) << endl;
@@ -495,7 +495,7 @@ void CompilerContext::appendInlineAssembly(
 			m_generatedYulUtilityCode = yul::AsmPrinter(nameRepository)(*obj.code);
 			std::string code = yul::AsmPrinter(nameRepository)(*obj.code);
 			langutil::CharStream charStream(m_generatedYulUtilityCode, _sourceName);
-			obj.code = yul::Parser(errorReporter, dialect, nameRepository).parse(charStream);
+			obj.code = yul::Parser(errorReporter, nameRepository).parse(charStream);
 			*obj.analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(nameRepository, obj);
 		}
 
@@ -544,7 +544,6 @@ void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _
 	yul::GasMeter meter(_yulNameRepository, _dialect, isCreation, _optimiserSettings.expectedExecutionsPerDeployment);
 	yul::OptimiserSuite::run(
 		_yulNameRepository,
-		_dialect,
 		&meter,
 		_object,
 		_optimiserSettings.optimizeStackAllocation,

@@ -41,13 +41,11 @@ class Disambiguator: public ASTCopier
 public:
 	explicit Disambiguator(
 		YulNameRepository& _yulNameRepository,
-		Dialect const& _dialect,
 		AsmAnalysisInfo const& _analysisInfo,
 		std::set<YulName> const& _externallyUsedIdentifiers = {}
 	):
 		m_info(_analysisInfo),
 		m_yulNameRepository(_yulNameRepository),
-		m_dialect(_dialect),
 		m_externallyUsedIdentifiers(_externallyUsedIdentifiers)
 	{
 	}
@@ -64,7 +62,6 @@ protected:
 
 	AsmAnalysisInfo const& m_info;
 	YulNameRepository& m_yulNameRepository;
-	Dialect const& m_dialect;
 	std::set<YulName> const& m_externallyUsedIdentifiers;
 
 	std::vector<Scope*> m_scopes;

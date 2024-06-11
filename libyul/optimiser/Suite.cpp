@@ -135,7 +135,6 @@ void outputPerformanceMetrics(map<string, int64_t> const& _metrics)
 
 void OptimiserSuite::run(
 	YulNameRepository& _yulNameRepository,
-	Dialect const& _dialect,
 	GasMeter const* _meter,
 	Object& _object,
 	bool _optimizeStackAllocation,
@@ -145,7 +144,7 @@ void OptimiserSuite::run(
 	std::set<YulName> const& _externallyUsedIdentifiers
 )
 {
-	EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect);
+	EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&_yulNameRepository.dialect());
 	bool usesOptimizedCodeGenerator =
 		_optimizeStackAllocation &&
 		evmDialect &&
@@ -155,13 +154,12 @@ void OptimiserSuite::run(
 
 	*_object.code = std::get<Block>(Disambiguator(
 		_yulNameRepository,
-		_dialect,
 		*_object.analysisInfo,
 		reservedIdentifiers
 	)(*_object.code));
 	Block& ast = *_object.code;
 
-	OptimiserStepContext context{_dialect, _yulNameRepository, reservedIdentifiers, _expectedExecutionsPerDeployment};
+	OptimiserStepContext context{_yulNameRepository.dialect(), _yulNameRepository, reservedIdentifiers, _expectedExecutionsPerDeployment};
 
 	OptimiserSuite suite(context, Debug::None);
 

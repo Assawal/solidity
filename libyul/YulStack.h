@@ -137,7 +137,6 @@ private:
 
 	void optimize(yul::Object& _object, bool _isCreation);
 
-	EVMDialect const& m_dialect;
 	YulNameRepository m_yulNameRepository;
 
 	Language m_language = Language::Assembly;

@@ -69,8 +69,7 @@ YulStack::YulStack(
 	solidity::frontend::OptimiserSettings _optimiserSettings,
 	const langutil::DebugInfoSelection& _debugInfoSelection
 ):
-    m_dialect(languageToDialect(_language, _evmVersion)),
-    m_yulNameRepository(m_dialect),
+    m_yulNameRepository(languageToDialect(_language, _evmVersion)),
 	m_language(_language),
 	m_evmVersion(_evmVersion),
 	m_eofVersion(_eofVersion),
@@ -92,7 +91,7 @@ bool YulStack::parseAndAnalyze(std::string const& _sourceName, std::string const
 	m_analysisSuccessful = false;
 	m_charStream = std::make_unique<CharStream>(_source, _sourceName);
 	std::shared_ptr<Scanner> scanner = std::make_shared<Scanner>(*m_charStream);
-	m_parserResult = ObjectParser(m_errorReporter, m_dialect, m_yulNameRepository).parse(scanner, false);
+	m_parserResult = ObjectParser(m_errorReporter, m_yulNameRepository).parse(scanner, false);
 	if (!m_errorReporter.errors().empty())
 		return false;
 	yulAssert(m_parserResult, "");
@@ -147,14 +146,17 @@ bool YulStack::analyzeParsed(Object& _object)
 
 void YulStack::compileEVM(AbstractAssembly& _assembly, bool _optimize)
 {
-	auto const& dialect = m_dialect;
-	EVMObjectCompiler::compile(*m_parserResult, _assembly, m_yulNameRepository, dialect, _optimize, m_eofVersion);
+	auto const* evmDialect = dynamic_cast<EVMDialect const*>(&m_yulNameRepository.dialect());
+	yulAssert(evmDialect);
+	EVMObjectCompiler::compile(*m_parserResult, _assembly, m_yulNameRepository, *evmDialect, _optimize, m_eofVersion);
 }
 
 void YulStack::optimize(Object& _object, bool _isCreation)
 {
 	yulAssert(_object.code, "");
 	yulAssert(_object.analysisInfo, "");
+	auto const* evmDialect = dynamic_cast<EVMDialect const*>(&m_yulNameRepository.dialect());
+	yulAssert(evmDialect);
 	for (auto& subNode: _object.subObjects)
 		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
 		{
@@ -163,7 +165,7 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 		}
 
 	std::unique_ptr<GasMeter> meter;
-	meter = std::make_unique<GasMeter>(m_yulNameRepository, m_dialect, _isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
+	meter = std::make_unique<GasMeter>(m_yulNameRepository, *evmDialect, _isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
 
 	auto [optimizeStackAllocation, yulOptimiserSteps, yulOptimiserCleanupSteps] = [&]() -> std::tuple<bool, std::string, std::string>
 	{
@@ -192,7 +194,6 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 
 	OptimiserSuite::run(
 		m_yulNameRepository,
-		m_dialect,
 		meter.get(),
 		_object,
 		// Defaults are the minimum necessary to avoid running into "Stack too deep" constantly.

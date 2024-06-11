@@ -327,3 +327,13 @@ std::shared_ptr<Object> YulStack::parserResult() const
 	yulAssert(m_parserResult->code, "");
 	return m_parserResult;
 }
+
+YulNameRepository const& YulStack::yulNameRepository() const
+{
+	return m_yulNameRepository;
+}
+
+YulNameRepository& YulStack::yulNameRepository()
+{
+	return m_yulNameRepository;
+}

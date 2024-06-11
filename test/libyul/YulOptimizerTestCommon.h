@@ -64,7 +64,6 @@ private:
 
 	Dialect const* m_dialect = nullptr;
 	std::set<YulString> m_reservedIdentifiers;
-	std::unique_ptr<NameDispenser> m_nameDispenser;
 	std::unique_ptr<OptimiserStepContext> m_context;
 
 	std::shared_ptr<Object> m_object;

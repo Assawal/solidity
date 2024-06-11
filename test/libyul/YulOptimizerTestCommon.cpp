@@ -106,7 +106,6 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			disambiguate();
 			FunctionHoister::run(*m_context, *m_ast);
 			FunctionGrouper::run(*m_context, *m_ast);
-			VarNameCleaner::run(*m_context, *m_ast);
 		}},
 		{"forLoopConditionIntoBody", [&]() {
 			disambiguate();
@@ -449,10 +448,8 @@ void YulOptimizerTestCommon::disambiguate()
 
 void YulOptimizerTestCommon::updateContext()
 {
-	m_nameDispenser = std::make_unique<NameDispenser>(*m_dialect, *m_object->code, m_reservedIdentifiers);
 	m_context = std::make_unique<OptimiserStepContext>(OptimiserStepContext{
 		*m_dialect,
-		*m_nameDispenser,
 		m_reservedIdentifiers,
 		frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
 	});

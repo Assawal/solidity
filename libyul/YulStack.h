@@ -129,6 +129,9 @@ public:
 	/// Return the parsed and analyzed object.
 	std::shared_ptr<Object> parserResult() const;
 
+	YulNameRepository const& yulNameRepository() const;
+	YulNameRepository& yulNameRepository();
+
 private:
 	bool analyzeParsed();
 	bool analyzeParsed(yul::Object& _object);

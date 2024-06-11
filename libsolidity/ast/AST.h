@@ -1567,26 +1567,22 @@ public:
 		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString,
-		yul::YulNameRepository const& _yulNameRepository,
+		std::unique_ptr<yul::YulNameRepository> _yulNameRepository,
 		ASTPointer<std::vector<ASTPointer<ASTString>>> _flags,
 		std::shared_ptr<yul::Block> _operations
-	):
-		Statement(_id, _location, _docString),
-		m_yulNameRepository(_yulNameRepository),
-		m_flags(std::move(_flags)),
-		m_operations(std::move(_operations))
-	{}
+	);
+	~InlineAssembly();
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
-	yul::YulNameRepository const& nameRepository() const { return m_yulNameRepository; }
+	yul::YulNameRepository& nameRepository() const { return *m_yulNameRepository; }
 	yul::Block const& operations() const { return *m_operations; }
 	ASTPointer<std::vector<ASTPointer<ASTString>>> const& flags() const { return m_flags; }
 
 	InlineAssemblyAnnotation& annotation() const override;
 
 private:
-	yul::YulNameRepository const& m_yulNameRepository;
+	std::unique_ptr<yul::YulNameRepository> mutable m_yulNameRepository;
 	ASTPointer<std::vector<ASTPointer<ASTString>>> m_flags;
 	std::shared_ptr<yul::Block> m_operations;
 };

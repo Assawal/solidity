@@ -296,7 +296,7 @@ void RenameSymbol::Visitor::endVisit(InlineAssembly const& _node)
 {
 	for (auto&& [identifier, externalReference]: _node.annotation().externalReferences)
 	{
-		std::string identifierName = _node.nameRepository().labelOf(identifier->name);
+		auto identifierName = _node.nameRepository().labelOf(identifier->name);
 		if (!externalReference.suffix.empty())
 			identifierName = identifierName.substr(0, identifierName.length() - externalReference.suffix.size() - 1);
 

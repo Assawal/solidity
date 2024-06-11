@@ -76,7 +76,7 @@ public:
 
 	explicit YulNameRepository(Dialect const& _dialect);
 
-	YulNameRepository(YulNameRepository&&) = delete;
+	YulNameRepository(YulNameRepository&&) = default;
 	YulNameRepository& operator=(YulNameRepository&&) = delete;
 	YulNameRepository(YulNameRepository const&) = delete;
 	YulNameRepository& operator=(YulNameRepository const&) = delete;

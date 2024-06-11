@@ -34,13 +34,13 @@ LiteralValue::LiteralValue(solidity::yul::LiteralValue::Data const& _data, std::
 
 LiteralValue::Data const& LiteralValue::value() const
 {
-	yulAssert(!unlimited() && m_numericValue.has_value());
+	yulAssert(!unlimited());
 	return *m_numericValue;
 }
 
 LiteralValue::BuiltinStringLiteralData const& LiteralValue::builtinStringLiteralValue() const
 {
-	yulAssert(unlimited() && m_stringValue != nullptr);
+	yulAssert(unlimited());
 	return *m_stringValue;
 }
 

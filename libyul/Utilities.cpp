@@ -126,9 +126,9 @@ LiteralValue solidity::yul::valueOfLiteral(std::string_view const _literal, Lite
 	util::unreachable();
 }
 
-std::string solidity::yul::formatLiteral(solidity::yul::Literal const& _literal, bool const assert)
+std::string solidity::yul::formatLiteral(solidity::yul::Literal const& _literal, bool const assertValidity)
 {
-	if (assert)
+	if (assertValidity)
 		yulAssert(validLiteral(_literal), "Encountered invalid literal in formatLiteral.");
 
 	if (_literal.value.unlimited())
@@ -139,8 +139,9 @@ std::string solidity::yul::formatLiteral(solidity::yul::Literal const& _literal,
 
 	if (_literal.kind == LiteralKind::Boolean)
 		return _literal.value.value() == true ? "true" : "false";
-	else
-		return _literal.value.value().str();
+
+	// if there is no hint and it is not a boolean, just stringify the u256 word
+	return _literal.value.value().str();
 }
 
 bool solidity::yul::validLiteral(solidity::yul::Literal const& _literal)

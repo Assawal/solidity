@@ -44,7 +44,9 @@ using TypedNameList = std::vector<TypedName>;
 /// Literal number or string (up to 32 bytes)
 enum class LiteralKind { Number, Boolean, String };
 /// Literal value that holds a u256 word of data, can be of LiteralKind type and - in case of arguments to
-/// builtins - exceed the u256 word (32 bytes), in which case the value is set to `unlimited`
+/// builtins - exceed the u256 word (32 bytes), in which case the value is stored as string. The former is constructed
+/// via u256 word and optional hint and leads to unlimited == false, the latter is
+/// constructed via the string constructor and leads to unlimited == true.
 class LiteralValue {
 public:
 	using Data = u256;

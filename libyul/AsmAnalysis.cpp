@@ -439,9 +439,9 @@ std::vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				}
 				else if (functionName.substr(0, "verbatim_"s.size()) == "verbatim_")
 				{
-					static u256 const empty {valueOfStringLiteral("").value()};
 					auto const& literalValue = std::get<Literal>(arg).value;
-					if ((literalValue.unlimited() && literalValue.builtinStringLiteralValue().empty()) || (!literalValue.unlimited() && literalValue.value() == empty))
+					yulAssert(literalValue.unlimited());  // verbatim literals are always unlimited
+					if (literalValue.builtinStringLiteralValue().empty())
 						m_errorReporter.typeError(
 							1844_error,
 							nativeLocationOf(arg),

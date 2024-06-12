@@ -39,7 +39,7 @@ struct AsmAnalysisInfo;
 struct Block;
 struct Object;
 struct Dialect;
-struct YulNameRepository;
+class YulNameRepository;
 }
 
 namespace solidity::yul::test

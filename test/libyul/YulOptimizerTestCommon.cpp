@@ -75,21 +75,24 @@ using namespace solidity::frontend;
 
 YulOptimizerTestCommon::YulOptimizerTestCommon(
 	std::shared_ptr<Object> _obj,
-	Dialect const& _dialect
-)
+	YulNameRepository& _yulNameRepository
+): m_yulNameRepository(_yulNameRepository)
 {
 	m_object = _obj;
 	m_ast = m_object->code;
 	m_analysisInfo = m_object->analysisInfo;
-	m_dialect = &_dialect;
 
 	m_namedSteps = {
 		{"disambiguator", [&]() { disambiguate(); }},
 		{"nameDisplacer", [&]() {
 			disambiguate();
 			NameDisplacer{
-				*m_nameDispenser,
-				{"illegal1"_yulstring, "illegal2"_yulstring, "illegal3"_yulstring, "illegal4"_yulstring, "illegal5"_yulstring}
+				{
+					m_yulNameRepository.nameOfLabel("illegal1"), m_yulNameRepository.nameOfLabel("illegal2"),
+					m_yulNameRepository.nameOfLabel("illegal3"), m_yulNameRepository.nameOfLabel("illegal4"),
+					m_yulNameRepository.nameOfLabel("illegal5")
+				},
+				m_yulNameRepository
 			}(*m_ast);
 		}},
 		{"blockFlattener", [&]() {
@@ -98,8 +101,8 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			BlockFlattener::run(*m_context, *m_ast);
 		}},
 		{"constantOptimiser", [&]() {
-			GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);
-			ConstantOptimiser{dynamic_cast<EVMDialect const&>(*m_dialect), meter}(*m_ast);
+			GasMeter meter(m_yulNameRepository, dynamic_cast<EVMDialect const&>(m_yulNameRepository.dialect()), false, 200);
+			ConstantOptimiser{_yulNameRepository, dynamic_cast<EVMDialect const&>(m_yulNameRepository.dialect()), meter}(*m_ast);
 		}},
 		{"varDeclInitializer", [&]() { VarDeclInitializer::run(*m_context, *m_ast); }},
 		{"varNameCleaner", [&]() {
@@ -319,13 +322,13 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			FunctionHoister::run(*m_context, *m_ast);
 			FunctionGrouper::run(*m_context, *m_ast);
 			size_t maxIterations = 16;
-			StackCompressor::run(*m_dialect, *m_object, true, maxIterations);
+			StackCompressor::run(m_yulNameRepository, *m_object, true, maxIterations);
 			BlockFlattener::run(*m_context, *m_ast);
 		}},
 		{"fullSuite", [&]() {
-			GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);
+			GasMeter meter(m_yulNameRepository, dynamic_cast<EVMDialect const&>(m_yulNameRepository.dialect()), false, 200);
 			OptimiserSuite::run(
-				*m_dialect,
+				m_yulNameRepository,
 				&meter,
 				*m_object,
 				true,
@@ -337,7 +340,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 		{"stackLimitEvader", [&]() {
 			disambiguate();
 			StackLimitEvader::run(*m_context, *m_object, CompilabilityChecker{
-				*m_dialect,
+				m_yulNameRepository,
 				*m_object,
 				true
 			}.unreachableVariables);
@@ -347,11 +350,12 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			// Mark all variables with a name starting with "$" for escalation to memory.
 			struct FakeUnreachableGenerator: ASTWalker
 			{
-				std::map<YulString, std::vector<YulString>> fakeUnreachables;
+				FakeUnreachableGenerator(YulNameRepository const& _yulNameRepository): m_yulNameRepository(_yulNameRepository) {}
+				std::map<YulName, std::vector<YulName>> fakeUnreachables;
 				using ASTWalker::operator();
 				void operator()(FunctionDefinition const& _function) override
 				{
-					YulString originalFunctionName = m_currentFunction;
+					auto originalFunctionName = m_currentFunction;
 					m_currentFunction = _function.name;
 					for (TypedName const& _argument: _function.parameters)
 						visitVariableName(_argument.name);
@@ -360,9 +364,9 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 					ASTWalker::operator()(_function);
 					m_currentFunction = originalFunctionName;
 				}
-				void visitVariableName(YulString _var)
+				void visitVariableName(YulName _var)
 				{
-					if (!_var.empty() && _var.str().front() == '$')
+					if (_var != YulNameRepository::emptyName() && m_yulNameRepository.labelOf(_var).front() == '$')
 						if (!util::contains(fakeUnreachables[m_currentFunction], _var))
 							fakeUnreachables[m_currentFunction].emplace_back(_var);
 				}
@@ -377,9 +381,10 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 					visitVariableName(_identifier.name);
 					ASTWalker::operator()(_identifier);
 				}
-				YulString m_currentFunction = YulString{};
+				YulName m_currentFunction = YulNameRepository::emptyName();
+				YulNameRepository const& m_yulNameRepository;
 			};
-			FakeUnreachableGenerator fakeUnreachableGenerator;
+			FakeUnreachableGenerator fakeUnreachableGenerator (m_yulNameRepository);
 			fakeUnreachableGenerator(*m_ast);
 			StackLimitEvader::run(*m_context, *m_object, fakeUnreachableGenerator.fakeUnreachables);
 		}}
@@ -393,8 +398,6 @@ void YulOptimizerTestCommon::setStep(std::string const& _optimizerStep)
 
 bool YulOptimizerTestCommon::runStep()
 {
-	yulAssert(m_dialect, "Dialect not set.");
-
 	updateContext();
 
 	if (m_namedSteps.count(m_optimizerStep))
@@ -441,7 +444,7 @@ std::shared_ptr<Block> YulOptimizerTestCommon::run()
 
 void YulOptimizerTestCommon::disambiguate()
 {
-	*m_object->code = std::get<Block>(Disambiguator(*m_dialect, *m_analysisInfo)(*m_object->code));
+	*m_object->code = std::get<Block>(Disambiguator(m_yulNameRepository, *m_analysisInfo)(*m_object->code));
 	m_analysisInfo.reset();
 	updateContext();
 }
@@ -449,8 +452,9 @@ void YulOptimizerTestCommon::disambiguate()
 void YulOptimizerTestCommon::updateContext()
 {
 	m_context = std::make_unique<OptimiserStepContext>(OptimiserStepContext{
-		*m_dialect,
-		m_reservedIdentifiers,
+		m_yulNameRepository.dialect(),
+		m_yulNameRepository,
+		{},
 		frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
 	});
 }

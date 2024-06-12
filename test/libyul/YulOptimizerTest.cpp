@@ -56,6 +56,7 @@ YulOptimizerTest::YulOptimizerTest(std::string const& _filename):
 
 	auto dialectName = m_reader.stringSetting("dialect", "evm");
 	m_dialect = &dialect(dialectName, solidity::test::CommonOptions::get().evmVersion());
+	m_yulNameRepository = std::make_unique<YulNameRepository>(*m_dialect);
 
 	m_expectation = m_reader.simpleExpectations();
 }
@@ -78,7 +79,7 @@ TestCase::TestResult YulOptimizerTest::run(std::ostream& _stream, std::string co
 		return TestResult::FatalError;
 	}
 
-	auto const printed = (m_object->subObjects.empty() ? AsmPrinter{ *m_dialect }(*m_object->code) : m_object->toString(m_dialect));
+	auto const printed = (m_object->subObjects.empty() ? AsmPrinter{ *m_yulNameRepository }(*m_object->code) : m_object->toString(m_yulNameRepository.get()));
 
 	// Re-parse new code for compilability
 	if (!std::get<0>(parse(_stream, _linePrefix, _formatted, printed)))
@@ -105,7 +106,7 @@ std::pair<std::shared_ptr<Object>, std::shared_ptr<AsmAnalysisInfo>> YulOptimize
 	soltestAssert(m_dialect, "");
 	std::shared_ptr<Object> object;
 	std::shared_ptr<AsmAnalysisInfo> analysisInfo;
-	std::tie(object, analysisInfo) = yul::test::parse(_source, *m_dialect, errors);
+	std::tie(object, analysisInfo) = yul::test::parse(_source, *m_yulNameRepository, errors);
 	if (!object || !analysisInfo || Error::containsErrors(errors))
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << std::endl;

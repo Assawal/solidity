@@ -49,7 +49,7 @@ namespace solidity::yul
 {
 // Forward-declaration to <yul/AST.h>
 struct Block;
-struct YulNameRepository;
+class YulNameRepository;
 }
 
 namespace solidity::frontend

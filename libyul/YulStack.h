@@ -140,7 +140,7 @@ private:
 
 	void optimize(yul::Object& _object, bool _isCreation);
 
-	YulNameRepository m_yulNameRepository;
+	std::unique_ptr<YulNameRepository> m_yulNameRepository;
 
 	Language m_language = Language::Assembly;
 	langutil::EVMVersion m_evmVersion;

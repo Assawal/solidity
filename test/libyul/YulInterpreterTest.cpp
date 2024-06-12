@@ -95,9 +95,10 @@ std::string YulInterpreterTest::interpret()
 	state.maxExprNesting = 64;
 	try
 	{
+		YulNameRepository repository (EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion()));
 		Interpreter::run(
 			state,
-			EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion()),
+			repository,
 			*m_ast,
 			/*disableExternalCalls=*/ !m_simulateExternalCallsToSelf,
 			/*disableMemoryTracing=*/ false

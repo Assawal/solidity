@@ -80,6 +80,8 @@ public:
 	friend std::ostream& operator<<(std::ostream& _stream, Program const& _program);
 	std::string toJson() const;
 
+	yul::YulNameRepository const& nameRepository() const;
+
 private:
 	Program(
 		std::unique_ptr<yul::YulNameRepository> _yulNameRepository,

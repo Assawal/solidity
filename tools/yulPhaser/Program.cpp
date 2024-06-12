@@ -115,6 +115,11 @@ std::string Program::toJson() const
 	return jsonPrettyPrint(removeNullMembers(std::move(serializedAst)));
 }
 
+yul::YulNameRepository const& Program::nameRepository() const
+{
+	return *m_yulNameRepository;
+}
+
 std::variant<std::unique_ptr<Block>, ErrorList> Program::parseObject(yul::YulNameRepository& _yulNameRepository, CharStream _source)
 {
 	ErrorList errors;

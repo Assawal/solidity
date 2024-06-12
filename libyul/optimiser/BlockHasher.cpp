@@ -57,7 +57,6 @@ void BlockHasher::operator()(Literal const& _literal)
 	else
 		hash64(std::hash<std::string>{}(_literal.value.builtinStringLiteralValue()));
 	hash64(_literal.type.hash());
-	hash8(static_cast<uint8_t>(_literal.kind));
 }
 
 void BlockHasher::operator()(Identifier const& _identifier)
